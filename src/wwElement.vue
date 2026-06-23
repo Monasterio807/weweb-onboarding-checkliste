@@ -399,7 +399,7 @@ export default {
     },
     authHeaders() {
       const key   = (this.content && 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc')    || '';
-      const token = ((this.content && this.content.authToken) || '').toString();
+      const token = ((this.content && ((this.content && this.content.authToken) || (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth && wwLib.globalContext.auth.session && wwLib.globalContext.auth.session.access_token) || '')) || '').toString();
       const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       return {
         'apikey':        key,
@@ -513,7 +513,7 @@ export default {
     },
 
     _isAuth() {
-      const token = ((this.content && this.content.authToken) || '').toString();
+      const token = ((this.content && ((this.content && this.content.authToken) || (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth && wwLib.globalContext.auth.session && wwLib.globalContext.auth.session.access_token) || '')) || '').toString();
       return token.length > 10;
     },
 
