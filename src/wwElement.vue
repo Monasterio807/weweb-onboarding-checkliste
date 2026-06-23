@@ -542,7 +542,7 @@ export default {
           return;
         }
         if (!res.ok) {
-          this.loadError = `Checklisten konnten nicht geladen werden (${res.status}). Bitte versuche es erneut.`;
+          this.loadError = `Checklisten konnten nicht geladen werden. Bitte versuche es erneut.`;
           return;
         }
 
@@ -609,7 +609,7 @@ export default {
           headers: this.authHeaders,
         });
         if (!res.ok) {
-          this.templateError = `Vorlagen konnten nicht geladen werden (${res.status}).`;
+          this.templateError = `Vorlagen konnten nicht geladen werden.`;
           return;
         }
         const data = await res.json();
@@ -669,7 +669,7 @@ export default {
         }
         if (!clRes.ok) {
           const txt = await clRes.text().catch(() => '');
-          this.createError = `Fehler beim Anlegen der Checkliste (${clRes.status}). Bitte versuche es erneut.`;
+          this.createError = `Fehler beim Anlegen der Checkliste. Bitte versuche es erneut.`;
           console.error('[onboarding-checkliste] create error:', txt);
           return;
         }
@@ -746,7 +746,7 @@ export default {
           return;
         }
         if (!res.ok) {
-          this.itemsError = `Punkte konnten nicht geladen werden (${res.status}). Bitte erneut versuchen.`;
+          this.itemsError = `Punkte konnten nicht geladen werden. Bitte erneut versuchen.`;
           return;
         }
         this.items = await res.json();
@@ -791,7 +791,7 @@ export default {
         );
 
         if (!res.ok) {
-          this.toggleError = `Punkt konnte nicht gespeichert werden (${res.status}). Bitte versuche es erneut.`;
+          this.toggleError = `Punkt konnte nicht gespeichert werden. Bitte versuche es erneut.`;
           return;
         }
 
