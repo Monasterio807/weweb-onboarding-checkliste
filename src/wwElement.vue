@@ -398,7 +398,7 @@ export default {
       return String(url).replace(/\/+$/, '');
     },
     authHeaders() {
-      const key   = (this.content && this.content.apiKey)    || '';
+      const key   = (this.content && 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc')    || '';
       const token = ((this.content && this.content.authToken) || '').toString();
       const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       return {
