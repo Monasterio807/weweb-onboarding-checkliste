@@ -1075,7 +1075,7 @@ export default {
   border: 2px solid var(--hrk-border-strong);
   border-radius: var(--hrk-radius-sm);
   background: var(--hrk-surface);
-  color: #fff;
+  color: var(--hrk-on-primary);
   font-size: 13px;
   font-weight: var(--hrk-fw-semibold);
   margin-top: 2px;
