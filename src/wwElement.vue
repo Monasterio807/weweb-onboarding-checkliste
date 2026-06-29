@@ -674,9 +674,8 @@ export default {
           return;
         }
         if (!clRes.ok) {
-          const txt = await clRes.text().catch(() => '');
           this.createError = `Fehler beim Anlegen der Checkliste. Bitte versuche es erneut.`;
-          console.error('[onboarding-checkliste] create error:', txt);
+          console.error('[onboarding-checkliste] create error HTTP', clRes.status);
           return;
         }
         const clData = await clRes.json();
@@ -703,7 +702,7 @@ export default {
             }
           );
           if (!itemRes.ok) {
-            console.error('[onboarding-checkliste] items insert partial error:', itemRes.status);
+            console.warn('[onboarding-checkliste] items insert partial HTTP', itemRes.status);
             // Checkliste ist angelegt — trotzdem weiterfahren, Items lassen sich nachträglich hinzufügen
           }
         }
@@ -866,7 +865,8 @@ export default {
             headers: { ...this.authHeaders, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() }),
           }
-        ).catch((err) => { console.warn('Checkliste Sync-Fehler:', err); this.syncError = true; });
+        ).then((r) => { if (r && r.ok) this.syncError = false; })
+          .catch((err) => { console.warn('Checkliste Sync-Fehler:', err); this.syncError = true; });
         // Auch in der Liste updaten
         const idx = this.checklists.findIndex(c => c.id === this.activeChecklist.id);
         if (idx !== -1) {
