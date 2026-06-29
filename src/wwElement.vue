@@ -324,6 +324,11 @@
           <div v-if="toggleError" class="hrk-note hrk-note--warn" role="alert" aria-live="polite">
             <p style="margin:0">{{ toggleError }}</p>
           </div>
+
+          <!-- Sync-Fehler (Status-Update fehlgeschlagen) -->
+          <div v-if="syncError" class="hrk-note hrk-note--danger" role="alert" aria-live="polite" style="margin-top:var(--hrk-space-3)">
+            <p style="margin:0">Speichern hat nicht geklappt — versuch es nochmal.</p>
+          </div>
         </div>
 
         <!-- Zurück (Desktop) -->
@@ -388,6 +393,7 @@ export default {
       itemsError: '',
       togglingIds: new Set(),
       toggleError: '',
+      syncError: false,
     };
   },
 
@@ -398,7 +404,7 @@ export default {
       return String(url).replace(/\/+$/, '');
     },
     authHeaders() {
-      const key   = (this.content && 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc')    || '';
+      const key   = (this.content && this.content.apiKey) || 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc';
       const token = ((this.content && ((this.content && this.content.authToken) || (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth && wwLib.globalContext.auth.session && wwLib.globalContext.auth.session.access_token) || '')) || '').toString();
       const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       return {
@@ -792,10 +798,19 @@ export default {
 
         if (!res.ok) {
           this.toggleError = `Punkt konnte nicht gespeichert werden. Bitte versuche es erneut.`;
+          // Rollback: UI-State zurücksetzen, da der PATCH fehlgeschlagen ist
+          const rollbackIdx = this.items.findIndex(i => i.id === item.id);
+          if (rollbackIdx !== -1) {
+            this.items = [
+              ...this.items.slice(0, rollbackIdx),
+              { ...this.items[rollbackIdx], is_done: item.is_done, done_at: item.done_at },
+              ...this.items.slice(rollbackIdx + 1),
+            ];
+          }
           return;
         }
 
-        // Optimistisch updaten
+        // Optimistisch updaten (nach erfolgreichem PATCH)
         const idx = this.items.findIndex(i => i.id === item.id);
         if (idx !== -1) {
           this.items = [
@@ -813,6 +828,15 @@ export default {
           this.toggleError = 'Timeout — bitte versuche es erneut.';
         } else {
           this.toggleError = 'Netzwerkfehler beim Speichern.';
+        }
+        // Rollback: UI-State zurücksetzen (Netzwerkfehler = kein PATCH durchgekommen)
+        const catchIdx = this.items.findIndex(i => i.id === item.id);
+        if (catchIdx !== -1) {
+          this.items = [
+            ...this.items.slice(0, catchIdx),
+            { ...this.items[catchIdx], is_done: item.is_done, done_at: item.done_at },
+            ...this.items.slice(catchIdx + 1),
+          ];
         }
       } finally {
         const next2 = new Set(this.togglingIds);
@@ -841,7 +865,7 @@ export default {
             headers: { ...this.authHeaders, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() }),
           }
-        ).catch(() => {/* silent */});
+        ).catch((err) => { console.warn('Checkliste Sync-Fehler:', err); this.syncError = true; });
         // Auch in der Liste updaten
         const idx = this.checklists.findIndex(c => c.id === this.activeChecklist.id);
         if (idx !== -1) {
