@@ -129,9 +129,9 @@
               placeholder="z.B. Maria Muster"
               autocomplete="name"
             />
-            <span v-if="formErrors.employee_name" class="hrk-hint" style="color:var(--hrk-danger)">
+            <p v-if="formErrors.employee_name" role="alert" class="hrk-hint" style="color:var(--hrk-danger)">
               {{ formErrors.employee_name }}
-            </span>
+            </p>
           </div>
 
           <div class="hrk-field">
@@ -146,7 +146,7 @@
         </div>
 
         <!-- Template-Items laden / anzeigen -->
-        <div v-if="templatesLoading" class="hrk-state hrk-state--mini">
+        <div v-if="templatesLoading" class="hrk-state hrk-state--mini" aria-live="polite">
           <div class="hrk-spinner" aria-hidden="true"></div>
           <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
         </div>
@@ -734,6 +734,7 @@ export default {
     async openChecklist(cl) {
       this.activeChecklist = cl;
       this.view = 'detail';
+      this.$nextTick(() => { const h1 = this.$el.querySelector('h1'); if (h1) h1.focus(); });
       await this.loadItems(cl.id);
     },
 
