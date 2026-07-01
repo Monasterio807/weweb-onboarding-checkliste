@@ -48,7 +48,9 @@
 
         <!-- Leer -->
         <div v-else-if="checklists.length === 0" class="hrk-empty">
-          <p style="font-size:2.5rem;margin:0">📋</p>
+          <svg class="hrk-icon hrk-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:2.5rem;height:2.5rem">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12 11,15 16,9"/>
+          </svg>
           <p class="hrk-state__title" style="margin:var(--hrk-space-2) 0 0">Noch keine Checkliste angelegt</p>
           <p class="hrk-muted" style="margin:var(--hrk-space-1) 0 var(--hrk-space-4)">
             Leg eine Checkliste für neue Mitarbeitende an — dauert nur 2 Minuten.
@@ -929,6 +931,9 @@ export default {
   --hrk-focus-ring:  0 0 0 3px rgba(123,45,59,.30);
   --hrk-tap-min: 44px;
   --hrk-page-max: 880px;
+  --hrk-icon-size-sm: 16px;
+  --hrk-icon-size-md: 20px;
+  --hrk-icon-size-lg: 28px;
 }
 
 .hrk-root, .hrk-root * { box-sizing: border-box; }
@@ -1011,6 +1016,12 @@ export default {
   border-top-color: var(--hrk-bordeaux); border-radius: 50%; animation: hrk-spin .8s linear infinite; }
 @keyframes hrk-spin { to { transform: rotate(360deg); } }
 .hrk-empty { text-align: center; color: var(--hrk-text-muted); padding: var(--hrk-space-7) var(--hrk-space-4); }
+
+/* ---------------- Icons (Inline-SVG, stroke=currentColor) ---------------- */
+.hrk-icon { width: var(--hrk-icon-size-md); height: var(--hrk-icon-size-md); flex: none; }
+.hrk-icon--sm { width: var(--hrk-icon-size-sm); height: var(--hrk-icon-size-sm); }
+.hrk-icon--lg { width: var(--hrk-icon-size-lg); height: var(--hrk-icon-size-lg); }
+.hrk-empty-icon { color: var(--hrk-bordeaux); margin: 0 auto; }
 .hrk-actions { display: flex; flex-wrap: wrap; gap: var(--hrk-space-3); }
 
 /* Hinweis-Boxen */
