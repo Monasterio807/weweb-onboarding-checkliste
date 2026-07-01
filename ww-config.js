@@ -56,5 +56,18 @@ export default {
       },
       /* wwEditor:end */
     },
+    loginUrl: {
+      label: { en: 'Login URL', de: 'Anmelden-Link' },
+      type: 'Text',
+      section: 'settings',
+      bindable: true,
+      defaultValue: '/anmelden',
+      /* wwEditor:start */
+      bindingValidation: {
+        type: 'string',
+        tooltip: 'Ziel des «Anmelden»-Links bei abgelaufener Sitzung (z.B. /anmelden).',
+      },
+      /* wwEditor:end */
+    },
   },
 };

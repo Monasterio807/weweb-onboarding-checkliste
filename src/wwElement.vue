@@ -28,7 +28,7 @@
         </header>
 
         <!-- Laden -->
-        <div v-if="loading" class="hrk-state">
+        <div v-if="loading" class="hrk-state" aria-live="polite">
           <div class="hrk-spinner" aria-hidden="true"></div>
           <p class="hrk-muted">Checklisten werden geladen …</p>
         </div>
@@ -36,7 +36,8 @@
         <!-- Auth-Fehler -->
         <div v-else-if="authError" class="hrk-state" role="alert" aria-live="assertive">
           <p class="hrk-state__title">Bitte melde dich an, um deine Checklisten zu sehen.</p>
-          <a v-if="content && content.backUrl" class="hrk-btn hrk-btn--primary" :href="backHref">Zurück</a>
+          <a class="hrk-btn hrk-btn--primary" :href="loginHref">Anmelden</a>
+          <a v-if="content && content.backUrl" class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück</a>
         </div>
 
         <!-- Netzwerk-/Ladefehler -->
@@ -265,7 +266,7 @@
         </div>
 
         <!-- Items laden -->
-        <div v-if="itemsLoading" class="hrk-state">
+        <div v-if="itemsLoading" class="hrk-state" aria-live="polite">
           <div class="hrk-spinner" aria-hidden="true"></div>
           <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
         </div>
@@ -416,6 +417,9 @@ export default {
     backHref() {
       return ((this.content && this.content.backUrl) || '').toString();
     },
+    loginHref() {
+      return (this.content && this.content.loginUrl) || '/anmelden';
+    },
 
     // Sortiert: offen → in_bearbeitung → abgeschlossen
     sortedChecklists() {
@@ -548,7 +552,7 @@ export default {
           return;
         }
         if (!res.ok) {
-          this.loadError = `Checklisten konnten nicht geladen werden. Bitte versuche es erneut.`;
+          this.loadError = `Checklisten konnten nicht geladen werden. Bitte versuch es nochmals.`;
           return;
         }
 
@@ -559,7 +563,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.loadError = 'Timeout — die Verbindung hat zu lange gedauert. Bitte versuche es erneut.';
+          this.loadError = 'Timeout — die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
           this.loadError = 'Netzwerkfehler — bitte Internetverbindung prüfen und erneut versuchen.';
         }
@@ -674,7 +678,7 @@ export default {
           return;
         }
         if (!clRes.ok) {
-          this.createError = `Fehler beim Anlegen der Checkliste. Bitte versuche es erneut.`;
+          this.createError = `Fehler beim Anlegen der Checkliste. Bitte versuch es nochmals.`;
           console.error('[onboarding-checkliste] create error HTTP', clRes.status);
           return;
         }
@@ -720,7 +724,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.createError = 'Timeout — bitte versuche es erneut.';
+          this.createError = 'Timeout — versuch es nochmals.';
         } else {
           this.createError = 'Netzwerkfehler beim Anlegen der Checkliste.';
         }
@@ -762,7 +766,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.itemsError = 'Timeout — bitte versuche es erneut.';
+          this.itemsError = 'Timeout — versuch es nochmals.';
         } else {
           this.itemsError = 'Netzwerkfehler beim Laden der Punkte.';
         }
@@ -797,7 +801,7 @@ export default {
         );
 
         if (!res.ok) {
-          this.toggleError = `Punkt konnte nicht gespeichert werden. Bitte versuche es erneut.`;
+          this.toggleError = `Punkt konnte nicht gespeichert werden. Bitte versuch es nochmals.`;
           // Rollback: UI-State zurücksetzen, da der PATCH fehlgeschlagen ist
           const rollbackIdx = this.items.findIndex(i => i.id === item.id);
           if (rollbackIdx !== -1) {
@@ -825,7 +829,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.toggleError = 'Timeout — bitte versuche es erneut.';
+          this.toggleError = 'Timeout — versuch es nochmals.';
         } else {
           this.toggleError = 'Netzwerkfehler beim Speichern.';
         }
