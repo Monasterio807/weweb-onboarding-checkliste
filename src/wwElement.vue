@@ -419,6 +419,18 @@ export default {
     backHref() {
       return ((this.content && this.content.backUrl) || '').toString();
     },
+    // User-ID aus dem JWT (sub-Claim) — für user_id beim INSERT (RLS: auth.uid() = user_id)
+    resolvedUserId() {
+      try {
+        const token = ((this.content && ((this.content && this.content.authToken) || (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth && wwLib.globalContext.auth.session && wwLib.globalContext.auth.session.access_token) || '')) || '').toString();
+        const t = token.replace(/^Bearer\s+/i, '');
+        const part = t.split('.')[1];
+        if (!part) return '';
+        const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+        const json = JSON.parse(decodeURIComponent(escape(atob(b64))));
+        return json && json.sub ? json.sub : '';
+      } catch (e) { return ''; }
+    },
     loginHref() {
       return (this.content && this.content.loginUrl) || '/anmelden';
     },
@@ -665,6 +677,9 @@ export default {
           employee_name: this.form.employee_name.trim(),
           status: 'offen',
           ...(this.form.start_date ? { start_date: this.form.start_date } : {}),
+          // user_id ist NOT NULL + RLS WITH CHECK auth.uid() = user_id.
+          // Fallback: Spalten-Default auth.uid() (Migration 20260702150100).
+          ...(this.resolvedUserId ? { user_id: this.resolvedUserId } : {}),
         };
         const clRes = await this.fetchWithTimeout(
           `${this.baseUrl}/rest/v1/onboarding_checklists`,
