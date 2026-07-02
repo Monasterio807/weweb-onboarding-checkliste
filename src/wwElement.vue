@@ -402,12 +402,12 @@ export default {
 
   computed: {
     baseUrl() {
-      let url = (this.content && this.content.supabaseUrl) || 'https://ztvqsxdudzdyqgeylujr.supabase.co';
-      if (/nemxnflngcfrpamkuesm/.test(String(url))) url = 'https://ztvqsxdudzdyqgeylujr.supabase.co';
+      let url = (this.content && this.content.supabaseUrl) || '';
+      if (/nemxnflngcfrpamkuesm/.test(String(url))) url = '';
       return String(url).replace(/\/+$/, '');
     },
     authHeaders() {
-      const key   = (this.content && this.content.apiKey) || 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc';
+      const key   = (this.content && this.content.apiKey) || '';
       const token = ((this.content && ((this.content && this.content.authToken) || (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth && wwLib.globalContext.auth.session && wwLib.globalContext.auth.session.access_token) || '')) || '').toString();
       const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       return {
