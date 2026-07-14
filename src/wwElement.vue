@@ -577,7 +577,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.loadError = 'Timeout — die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
+          this.loadError = 'Die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
           this.loadError = 'Netzwerkfehler — bitte Internetverbindung prüfen und erneut versuchen.';
         }
@@ -642,7 +642,7 @@ export default {
         this.selectedTemplateIds = new Set(this.templateItems.map(t => t.id));
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.templateError = 'Timeout beim Laden der Vorlagen. Bitte erneut versuchen.';
+          this.templateError = 'Das Laden der Vorlagen hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
           this.templateError = 'Netzwerkfehler beim Laden der Vorlagen.';
         }
@@ -741,7 +741,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.createError = 'Timeout — versuch es nochmals.';
+          this.createError = 'Das hat zu lange gedauert — versuch es nochmals.';
         } else {
           this.createError = 'Netzwerkfehler beim Anlegen der Checkliste.';
         }
@@ -783,7 +783,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.itemsError = 'Timeout — versuch es nochmals.';
+          this.itemsError = 'Das hat zu lange gedauert — versuch es nochmals.';
         } else {
           this.itemsError = 'Netzwerkfehler beim Laden der Punkte.';
         }
@@ -846,7 +846,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.toggleError = 'Timeout — versuch es nochmals.';
+          this.toggleError = 'Das hat zu lange gedauert — versuch es nochmals.';
         } else {
           this.toggleError = 'Netzwerkfehler beim Speichern.';
         }
