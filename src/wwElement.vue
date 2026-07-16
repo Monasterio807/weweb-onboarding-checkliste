@@ -916,6 +916,7 @@ export default {
   --hrk-creme:           #FBF8F3;
   --hrk-anthrazit:       #2B2B2B;
   --hrk-gold:            #C9A24B;
+  --hrk-on-primary:      #FFFFFF;  /* Text/Icons auf primaer (Bordeaux) gefaerbten Flaechen */
   --hrk-surface:         #FFFFFF;
   --hrk-surface-muted:   #F5F1EB;
   --hrk-border:          #ECE5D9;
@@ -953,6 +954,7 @@ export default {
 
 .hrk-root, .hrk-root * { box-sizing: border-box; }
 .hrk-root {
+  width: 100%; /* volle Breite im WeWeb-Flex-Parent (sonst klebt der Inhalt links) */
   font-family: var(--hrk-font-body);
   font-size: var(--hrk-fs-body);
   line-height: var(--hrk-lh-body);
