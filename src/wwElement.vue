@@ -619,6 +619,7 @@ export default {
       this.form        = { employee_name: '', start_date: '' };
       this.formErrors  = {};
       this.createError = '';
+      this.linkHinweis = '';
       this.selectedTemplateIds = new Set();
       this.view = 'create';
       this.loadTemplates();
@@ -683,7 +684,7 @@ export default {
       if (bestehende) {
         this.form = { employee_name: '', start_date: '' };
         this.linkHinweis = `Für ${bestehende.employee_name} gab es bereits eine Checkliste — die ist hier verknüpft, keine zweite wurde angelegt.`;
-        await this.openChecklist(bestehende);
+        await this.openChecklist(bestehende, { keepHint: true });
         return;
       }
 
@@ -768,7 +769,8 @@ export default {
     },
 
     /* ──────────────────── DETAIL ──────────────────── */
-    async openChecklist(cl) {
+    async openChecklist(cl, opts = {}) {
+      if (!opts.keepHint) this.linkHinweis = '';
       this.activeChecklist = cl;
       this.view = 'detail';
       this.$nextTick(() => { const h1 = this.$el.querySelector('h1'); if (h1) h1.focus(); });
