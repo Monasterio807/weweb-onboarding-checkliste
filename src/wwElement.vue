@@ -227,6 +227,8 @@
       <div v-else-if="view === 'detail' && activeChecklist">
         <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">← Alle Checklisten</button>
 
+        <p v-if="linkHinweis" class="hrk-note hrk-note--muted hrk-small" style="margin-bottom:var(--hrk-space-4)">{{ linkHinweis }}</p>
+
         <!-- Kopf + Fortschritt -->
         <div class="hrk-card" style="margin-bottom:var(--hrk-space-5)">
           <div class="hrk-record-head" style="margin-bottom:var(--hrk-space-4)">
@@ -388,6 +390,7 @@ export default {
       templatesLoading: false,
       templateError: '',
       creating: false,
+      linkHinweis: '',
       createError: '',
 
       // Detail
@@ -665,8 +668,22 @@ export default {
       this.formErrors  = {};
       this.createError = '';
 
-      if (!this.form.employee_name.trim()) {
+      const nameTrimmed = this.form.employee_name.trim();
+      if (!nameTrimmed) {
         this.formErrors = { employee_name: 'Bitte gib Vorname und Name ein.' };
+        return;
+      }
+
+      // Audit-Fund 2.1: der Vertrag-Wizard legte fuer dieselbe Person eine zweite,
+      // nicht verknuepfte Checkliste an. Vor dem Anlegen auf bestehende Checkliste
+      // desselben Namens pruefen (case-/leerzeichen-unabhaengig) und diese oeffnen
+      // statt eine Dublette zu erzeugen.
+      const nameNorm = nameTrimmed.toLowerCase();
+      const bestehende = this.checklists.find((c) => (c.employee_name || '').trim().toLowerCase() === nameNorm);
+      if (bestehende) {
+        this.form = { employee_name: '', start_date: '' };
+        this.linkHinweis = `Für ${bestehende.employee_name} gab es bereits eine Checkliste — die ist hier verknüpft, keine zweite wurde angelegt.`;
+        await this.openChecklist(bestehende);
         return;
       }
 
