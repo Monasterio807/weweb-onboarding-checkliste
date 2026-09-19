@@ -905,7 +905,10 @@ export default {
             headers: { ...this.authHeaders, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() }),
           }
-        ).then((r) => { if (r && r.ok) this.syncError = false; })
+        ).then((r) => {
+          if (r && r.ok) { this.syncError = false; }
+          else { console.warn('Checkliste Sync-Fehler: Status', r && r.status); this.syncError = true; }
+        })
           .catch((err) => { console.warn('Checkliste Sync-Fehler:', err); this.syncError = true; });
         // Auch in der Liste updaten
         const idx = this.checklists.findIndex(c => c.id === this.activeChecklist.id);
