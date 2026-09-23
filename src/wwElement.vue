@@ -17,7 +17,7 @@
               :disabled="loading"
               aria-label="Aktualisieren"
               @click="loadChecklists"
-            >↻</button>
+            ><svg class="hrk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20,4 20,9 15,9"/></svg></button>
             <button
               v-if="!authError"
               class="hrk-btn hrk-btn--primary"
@@ -48,9 +48,7 @@
 
         <!-- Leer -->
         <div v-else-if="checklists.length === 0" class="hrk-empty">
-          <svg class="hrk-icon hrk-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:2.5rem;height:2.5rem">
-            <rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12 11,15 16,9"/>
-          </svg>
+          <svg class="hrk-icon hrk-icon--lg hrk-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12.5 11,15.5 16.5,9.5"/></svg>
           <p class="hrk-state__title" style="margin:var(--hrk-space-2) 0 0">Noch keine Checkliste angelegt</p>
           <p class="hrk-muted" style="margin:var(--hrk-space-1) 0 var(--hrk-space-4)">
             Leg eine Checkliste für neue Mitarbeitende an — dauert nur 2 Minuten.
@@ -92,7 +90,7 @@
             >
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--hrk-space-1)">
                 <span class="hrk-muted hrk-small">{{ cl._stats.done }}&thinsp;/&thinsp;{{ cl._stats.total }} erledigt</span>
-                <span class="hrk-muted hrk-small">{{ cl._stats.pct }}%</span>
+                <span class="hrk-muted hrk-small hrk-num">{{ cl._stats.pct }}%</span>
               </div>
               <div class="progress-track" role="progressbar" :aria-valuenow="cl._stats.pct" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-bar" :style="{ width: cl._stats.pct + '%' }"></div>
@@ -107,13 +105,13 @@
 
         <!-- Zurück -->
         <div v-if="backHref" style="margin-top:var(--hrk-space-6)">
-          <a class="hrk-btn hrk-btn--ghost" :href="backHref">← Zurück</a>
+          <a class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück</a>
         </div>
       </div>
 
       <!-- ====== ANSICHT: ERSTELLEN ====== -->
       <div v-else-if="view === 'create'">
-        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">← Zurück</button>
+        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">Zurück</button>
         <h1 class="hrk-h1">Neue Onboarding-Checkliste</h1>
         <p class="hrk-muted" style="margin-bottom:var(--hrk-space-5)">
           Erfasse die neuen Mitarbeitenden und wähle aus, welche Punkte abgehakt werden sollen.
@@ -187,7 +185,7 @@
               @keydown.enter="toggleTemplate(item.id)"
             >
               <span class="checklist-checkbox" :class="{ 'checklist-checkbox--checked': selectedTemplateIds.has(item.id) }">
-                <span v-if="selectedTemplateIds.has(item.id)">✓</span>
+                <svg v-if="selectedTemplateIds.has(item.id)" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
               </span>
               <div>
                 <span class="checklist-item-title">{{ item.title }}</span>
@@ -225,7 +223,7 @@
 
       <!-- ====== ANSICHT: DETAIL ====== -->
       <div v-else-if="view === 'detail' && activeChecklist">
-        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">← Alle Checklisten</button>
+        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'"><svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="20" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></svg>Alle Checklisten</button>
 
         <p v-if="linkHinweis" class="hrk-note hrk-note--muted hrk-small" style="margin-bottom:var(--hrk-space-4)">{{ linkHinweis }}</p>
 
@@ -253,7 +251,7 @@
               <span class="hrk-small" style="font-weight:var(--hrk-fw-semibold)">
                 Fortschritt: {{ detailStats.done }}&thinsp;/&thinsp;{{ detailStats.total }} Punkte erledigt
               </span>
-              <span class="hrk-small" style="font-weight:var(--hrk-fw-semibold);color:var(--hrk-bordeaux)">
+              <span class="hrk-small hrk-num" style="font-weight:var(--hrk-fw-semibold);color:var(--hrk-schiefer)">
                 {{ detailStats.pct }}%
               </span>
             </div>
@@ -308,7 +306,7 @@
                 :class="{ 'checklist-checkbox--checked': item.is_done }"
                 aria-hidden="true"
               >
-                <span v-if="item.is_done">✓</span>
+                <svg v-if="item.is_done" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
               </span>
               <div style="flex:1;min-width:0">
                 <span class="checklist-item-title" :class="{ 'checklist-item-title--done': item.is_done }">
@@ -338,7 +336,7 @@
 
         <!-- Zurück (Desktop) -->
         <div v-if="backHref" style="margin-top:var(--hrk-space-6)">
-          <a class="hrk-btn hrk-btn--ghost" :href="backHref">← Zurück zur Übersicht</a>
+          <a class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück zur Übersicht</a>
         </div>
       </div>
 
@@ -935,24 +933,24 @@ export default {
   --hrk-bordeaux:        #7B2D3B;
   --hrk-bordeaux-dark:   #5E2129;
   --hrk-bordeaux-soft:   #F3E7E9;
-  --hrk-creme:           #FBF8F3;
-  --hrk-anthrazit:       #2B2B2B;
+  --hrk-creme: #F7F5F1;
+  --hrk-anthrazit: #241F1C;
   --hrk-gold:            #C9A24B;
   --hrk-on-primary:      #FFFFFF;  /* Text/Icons auf primaer (Bordeaux) gefaerbten Flaechen */
   --hrk-surface:         #FFFFFF;
-  --hrk-surface-muted:   #F5F1EB;
-  --hrk-border:          #ECE5D9;
-  --hrk-border-strong:   #DAD2C6;
-  --hrk-text:            #2B2B2B;
+  --hrk-surface-muted: #F2EFEA;
+  --hrk-border: #E2DDD5;
+  --hrk-border-strong: #CFC8BD;
+  --hrk-text: #241F1C;
   --hrk-text-muted:      #6B6357;
-  --hrk-success:         #2E7D5B;  --hrk-success-bg: #E5F1EB;
-  --hrk-warning:         #B7791F;  --hrk-warning-bg: #FBF1DD;
+  --hrk-success: #2A7254;  --hrk-success-bg: #E5F1EB;
+  --hrk-warning: #946010;  --hrk-warning-bg: #FBF1DD;
   --hrk-danger:          #B23A48;  --hrk-danger-bg:  #F8E7E9;
   --hrk-info:            #2F6F9F;  --hrk-info-bg:    #E6F0F7;
   --hrk-neutral:         #6B6357;  --hrk-neutral-bg: #EFEAE2;
-  --hrk-font-head: "Fraunces", "Lora", Georgia, serif;
+  --hrk-font-head: "Archivo", "Inter", system-ui, sans-serif;
   --hrk-font-body: "Inter", "Source Sans 3", system-ui, sans-serif;
-  --hrk-fs-h1: 1.9375rem;
+  --hrk-fs-h1: 1.875rem;
   --hrk-fs-h2: 1.375rem;
   --hrk-fs-h3: 1.125rem;
   --hrk-fs-body: 1.0625rem;
@@ -962,16 +960,34 @@ export default {
   --hrk-space-1: 4px;  --hrk-space-2: 8px;  --hrk-space-3: 12px;
   --hrk-space-4: 16px; --hrk-space-5: 24px; --hrk-space-6: 32px;
   --hrk-space-7: 48px;
-  --hrk-radius-sm: 8px; --hrk-radius-md: 12px; --hrk-radius-lg: 14px;
-  --hrk-radius-pill: 999px;
+  --hrk-radius-sm: 6px; --hrk-radius-md: 6px; --hrk-radius-lg: 10px;
+  --hrk-radius-pill: 6px;
   --hrk-shadow-card: 0 1px 2px rgba(40,35,30,.05);
-  --hrk-shadow-pop:  0 8px 28px rgba(40,35,30,.12);
-  --hrk-focus-ring:  0 0 0 3px rgba(123,45,59,.30);
+  --hrk-shadow-pop: 0 1px 2px rgba(40,35,30,.05);
+  --hrk-focus-ring: 0 0 0 3px rgba(51,71,91,.35);
   --hrk-tap-min: 44px;
   --hrk-page-max: 880px;
   --hrk-icon-size-sm: 16px;
   --hrk-icon-size-md: 20px;
   --hrk-icon-size-lg: 28px;
+  /* Design-Umsetzung 23.09.2026 (Phase 1): Schiefer, Schriften, zwei Radien, ein Schatten */
+  --hrk-schiefer: #33475B;
+  --hrk-schiefer-dark: #243444;
+  --hrk-schiefer-soft: #EBEEF1;
+  --hrk-on-dark: #FFFFFF;
+  --hrk-on-dark-strong: rgba(255,255,255,.92);
+  --hrk-on-dark-soft: rgba(255,255,255,.82);
+  --hrk-on-dark-muted: rgba(255,255,255,.40);
+  --hrk-on-dark-faint: rgba(255,255,255,.12);
+  --hrk-overlay: rgba(20,24,28,.55);
+  --hrk-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --hrk-font-brand: "Fraunces", Georgia, serif;
+  --hrk-fs-xs: 0.8125rem;
+  --hrk-ls-caps: .06em;
+  --hrk-radius-field: 6px;
+  --hrk-radius-card: 10px;
+  --hrk-shadow: 0 1px 2px rgba(40,35,30,.05);
+  --hrk-page-wide: 1200px;
 }
 
 .hrk-root, .hrk-root * { box-sizing: border-box; }
@@ -985,9 +1001,9 @@ export default {
   -webkit-font-smoothing: antialiased;
 }
 .hrk-page { max-width: var(--hrk-page-max); margin: 0 auto; padding: var(--hrk-space-6) var(--hrk-space-4); }
-.hrk-h1 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h1); font-weight: var(--hrk-fw-semibold); line-height: 1.12; letter-spacing: -.02em; color: var(--hrk-bordeaux); margin: 0 0 var(--hrk-space-3); }
-.hrk-h2 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h2); font-weight: var(--hrk-fw-semibold); line-height: 1.2; letter-spacing: -.01em; color: var(--hrk-bordeaux); margin: var(--hrk-space-6) 0 var(--hrk-space-3); }
-.hrk-h3 { font-family: var(--hrk-font-body); font-size: var(--hrk-fs-h3); font-weight: var(--hrk-fw-semibold); margin: var(--hrk-space-5) 0 var(--hrk-space-2); }
+.hrk-h1 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h1); font-weight: var(--hrk-fw-semibold); line-height: 1.12; letter-spacing: -.02em; color: var(--hrk-text); margin: 0 0 var(--hrk-space-3); }
+.hrk-h2 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h2); font-weight: var(--hrk-fw-semibold); line-height: 1.2; letter-spacing: -.01em; color: var(--hrk-text); margin: var(--hrk-space-6) 0 var(--hrk-space-3); }
+.hrk-h3 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h3); font-weight: var(--hrk-fw-semibold); margin: var(--hrk-space-5) 0 var(--hrk-space-2); }
 .hrk-muted { color: var(--hrk-text-muted); }
 .hrk-small { font-size: var(--hrk-fs-small); }
 .hrk-stack > * + * { margin-top: var(--hrk-space-4); }
@@ -997,21 +1013,20 @@ export default {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--hrk-space-2);
   min-height: var(--hrk-tap-min); padding: 0 var(--hrk-space-5);
   font: inherit; font-weight: var(--hrk-fw-semibold);
-  border-radius: var(--hrk-radius-md); border: 1px solid transparent;
-  cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .05s;
+  border-radius: var(--hrk-radius-field); border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, color .15s;
 }
-.hrk-btn:active { transform: translateY(1px); }
 .hrk-btn:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
 .hrk-btn--primary   { background: var(--hrk-bordeaux); color: var(--hrk-on-primary); }
 .hrk-btn--primary:hover { background: var(--hrk-bordeaux-dark); }
-.hrk-btn--secondary { background: var(--hrk-surface); color: var(--hrk-bordeaux); border-color: var(--hrk-border-strong); }
-.hrk-btn--secondary:hover { background: var(--hrk-bordeaux-soft); }
-.hrk-btn--ghost     { background: transparent; color: var(--hrk-bordeaux); }
-.hrk-btn--ghost:hover { background: var(--hrk-bordeaux-soft); }
+.hrk-btn--secondary { background: var(--hrk-surface); color: var(--hrk-schiefer); border-color: var(--hrk-border-strong); }
+.hrk-btn--secondary:hover { background: var(--hrk-schiefer-soft); }
+.hrk-btn--ghost     { background: transparent; color: var(--hrk-schiefer); }
+.hrk-btn--ghost:hover { background: var(--hrk-schiefer-soft); }
 .hrk-btn[disabled] { opacity: .5; cursor: not-allowed; }
 .hrk-btn--block { width: 100%; }
 .hrk-cta-bar { position: sticky; bottom: 0; padding: var(--hrk-space-3) var(--hrk-space-4);
-  background: linear-gradient(180deg, rgba(251,248,243,0), var(--hrk-creme) 35%); }
+  background: var(--hrk-creme); border-top: 1px solid var(--hrk-border); }
 
 /* Eingabefelder */
 .hrk-field { display: block; margin-bottom: var(--hrk-space-4); }
@@ -1020,14 +1035,14 @@ export default {
 .hrk-input, .hrk-select {
   width: 100%; min-height: var(--hrk-tap-min); padding: var(--hrk-space-3);
   font: inherit; color: var(--hrk-text); background: var(--hrk-surface);
-  border: 1px solid var(--hrk-border); border-radius: var(--hrk-radius-sm);
+  border: 1px solid var(--hrk-border-strong); border-radius: var(--hrk-radius-field);
 }
-.hrk-input:focus, .hrk-select:focus { outline: none; border-color: var(--hrk-bordeaux); box-shadow: var(--hrk-focus-ring); }
+.hrk-input:focus, .hrk-select:focus { outline: none; border-color: var(--hrk-schiefer); box-shadow: var(--hrk-focus-ring); }
 .hrk-input--error { border-color: var(--hrk-danger); }
 
 /* Karten */
 .hrk-card { background: var(--hrk-surface); border: 1px solid var(--hrk-border);
-  border-radius: var(--hrk-radius-lg); box-shadow: var(--hrk-shadow-card); padding: var(--hrk-space-5); }
+  border-radius: var(--hrk-radius-card); box-shadow: var(--hrk-shadow); padding: var(--hrk-space-5); }
 
 /* Record-Head */
 .hrk-record-head { display: flex; align-items: flex-start; justify-content: space-between;
@@ -1052,7 +1067,7 @@ export default {
 .hrk-state--mini { padding: var(--hrk-space-6) var(--hrk-space-3); }
 .hrk-state__title { color: var(--hrk-text); font-weight: var(--hrk-fw-semibold); margin: 0; }
 .hrk-spinner { width: 28px; height: 28px; border: 3px solid var(--hrk-border);
-  border-top-color: var(--hrk-bordeaux); border-radius: 50%; animation: hrk-spin .8s linear infinite; }
+  border-top-color: var(--hrk-schiefer); border-radius: 50%; animation: hrk-spin .8s linear infinite; }
 @keyframes hrk-spin { to { transform: rotate(360deg); } }
 .hrk-empty { text-align: center; color: var(--hrk-text-muted); padding: var(--hrk-space-7) var(--hrk-space-4); }
 
@@ -1060,28 +1075,31 @@ export default {
 .hrk-icon { width: var(--hrk-icon-size-md); height: var(--hrk-icon-size-md); flex: none; }
 .hrk-icon--sm { width: var(--hrk-icon-size-sm); height: var(--hrk-icon-size-sm); }
 .hrk-icon--lg { width: var(--hrk-icon-size-lg); height: var(--hrk-icon-size-lg); }
-.hrk-empty-icon { color: var(--hrk-bordeaux); margin: 0 auto; }
+.hrk-empty-icon { display: block; color: var(--hrk-schiefer); margin: 0 auto; }
+/* Zahlen in Kolonnen: Prozente, Zaehler */
+.hrk-num { font-family: var(--hrk-font-mono); font-variant-numeric: tabular-nums; }
 .hrk-actions { display: flex; flex-wrap: wrap; gap: var(--hrk-space-3); }
 
 /* Hinweis-Boxen */
-.hrk-note { border-left: 4px solid var(--hrk-info); background: var(--hrk-info-bg);
-  padding: var(--hrk-space-3) var(--hrk-space-4); border-radius: var(--hrk-radius-sm); }
+.hrk-note { border-left: 3px solid var(--hrk-info); background: var(--hrk-info-bg);
+  padding: var(--hrk-space-3) var(--hrk-space-4); border-radius: 0 var(--hrk-radius-field) var(--hrk-radius-field) 0; }
 .hrk-note--warn   { border-left-color: var(--hrk-warning); background: var(--hrk-warning-bg); }
 .hrk-note--danger { border-left-color: var(--hrk-danger); background: var(--hrk-danger-bg); }
+.hrk-note--muted  { border-left-color: var(--hrk-border-strong); background: var(--hrk-surface-muted); color: var(--hrk-text-muted); }
 
 /* ──────── Fortschrittsbalken (komponentenspezifisch) ──────── */
 .progress-track {
   width: 100%;
   height: 8px;
   background: var(--hrk-border);
-  border-radius: var(--hrk-radius-pill);
+  border-radius: 0;
   overflow: hidden;
 }
 .progress-track--lg { height: 12px; }
 .progress-bar {
   height: 100%;
-  background: var(--hrk-bordeaux);
-  border-radius: var(--hrk-radius-pill);
+  background: var(--hrk-schiefer);
+  border-radius: 0;
   transition: width .3s ease;
   min-width: 4px;
 }
@@ -1091,8 +1109,9 @@ export default {
   display: flex;
   align-items: flex-start;
   gap: var(--hrk-space-3);
+  min-height: var(--hrk-tap-min);
   padding: var(--hrk-space-3) var(--hrk-space-2);
-  border-radius: var(--hrk-radius-sm);
+  border-radius: var(--hrk-radius-field);
   border-bottom: 1px solid var(--hrk-border);
   cursor: pointer;
   transition: background .12s;
@@ -1107,8 +1126,9 @@ export default {
   display: flex;
   align-items: flex-start;
   gap: var(--hrk-space-3);
+  min-height: var(--hrk-tap-min);
   padding: var(--hrk-space-3) var(--hrk-space-2);
-  border-radius: var(--hrk-radius-sm);
+  border-radius: var(--hrk-radius-field);
   border-bottom: 1px solid var(--hrk-border);
   cursor: pointer;
   transition: background .12s;
@@ -1117,27 +1137,25 @@ export default {
 .checklist-item-select:last-child { border-bottom: 0; }
 .checklist-item-select:hover { background: var(--hrk-surface-muted); }
 .checklist-item-select:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
-.checklist-item-select--active { background: var(--hrk-bordeaux-soft); }
+.checklist-item-select--active { background: var(--hrk-schiefer-soft); }
 
 .checklist-checkbox {
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: 2px solid var(--hrk-border-strong);
-  border-radius: var(--hrk-radius-sm);
+  border-radius: var(--hrk-radius-field);
   background: var(--hrk-surface);
-  color: var(--hrk-on-primary);
-  font-size: 13px;
-  font-weight: var(--hrk-fw-semibold);
+  color: var(--hrk-on-dark);
   margin-top: 2px;
   transition: background .12s, border-color .12s;
 }
 .checklist-checkbox--checked {
-  background: var(--hrk-bordeaux);
-  border-color: var(--hrk-bordeaux);
+  background: var(--hrk-schiefer);
+  border-color: var(--hrk-schiefer);
 }
 
 .checklist-item-title {
