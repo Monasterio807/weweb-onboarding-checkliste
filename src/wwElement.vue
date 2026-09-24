@@ -6,7 +6,7 @@
       <div v-if="view === 'list'">
         <header class="hrk-record-head">
           <div class="hrk-record-head__main">
-            <h1 class="hrk-h1 hrk-record-head__name">Onboarding-Checklisten</h1>
+            <h1 class="hrk-h1 hrk-record-head__name">Eintritts-Checklisten</h1>
             <p v-if="!loading && !authError && !loadError" class="hrk-muted hrk-record-head__type">
               {{ checklists.length === 0 ? 'Noch keine Checkliste angelegt' : checklists.length + ' ' + (checklists.length === 1 ? 'Checkliste' : 'Checklisten') }}
             </p>
@@ -51,7 +51,7 @@
           <svg class="hrk-icon hrk-icon--lg hrk-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12.5 11,15.5 16.5,9.5"/></svg>
           <p class="hrk-state__title" style="margin:var(--hrk-space-2) 0 0">Noch keine Checkliste angelegt</p>
           <p class="hrk-muted" style="margin:var(--hrk-space-1) 0 var(--hrk-space-4)">
-            Leg eine Checkliste für neue Mitarbeitende an — dauert nur 2 Minuten.
+            Leg für neue Mitarbeitende eine Checkliste an und hake beim Eintritt Punkt für Punkt ab.
           </p>
           <button class="hrk-btn hrk-btn--primary" @click="startCreate">+ Erste Checkliste anlegen</button>
         </div>
@@ -112,15 +112,38 @@
       <!-- ====== ANSICHT: ERSTELLEN ====== -->
       <div v-else-if="view === 'create'">
         <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">Zurück</button>
-        <h1 class="hrk-h1">Neue Onboarding-Checkliste</h1>
-        <p class="hrk-muted" style="margin-bottom:var(--hrk-space-5)">
-          Erfasse die neuen Mitarbeitenden und wähle aus, welche Punkte abgehakt werden sollen.
-        </p>
+        <h1 class="hrk-h1" style="margin-bottom:var(--hrk-space-5)">Neue Eintritts-Checkliste</h1>
 
         <!-- Formular -->
         <div class="hrk-card hrk-stack">
-          <div class="hrk-field">
-            <label class="hrk-label" for="oc-name">Vorname &amp; Name *</label>
+          <!-- s2-B04: Person aus den Mitarbeitenden wählen, Freitext nur als Rückfall -->
+          <div v-if="employeesLoading" class="hrk-field" aria-live="polite">
+            <p class="hrk-label" style="margin:0">Für wen ist die Checkliste?</p>
+            <p class="hrk-muted hrk-small" style="margin:0">Mitarbeitende werden geladen …</p>
+          </div>
+
+          <div v-else-if="employees.length" class="hrk-field">
+            <label class="hrk-label" for="oc-person">Für wen ist die Checkliste?</label>
+            <select
+              id="oc-person"
+              v-model="form.employee_id"
+              class="hrk-select"
+              :class="{ 'hrk-input--error': formErrors.employee_id }"
+              :aria-invalid="formErrors.employee_id ? 'true' : null"
+              :aria-describedby="formErrors.employee_id ? 'oc-person-error oc-person-hint' : 'oc-person-hint'"
+            >
+              <option value="">Bitte wählen</option>
+              <option v-for="e in sortedEmployees" :key="e.id" :value="e.id">{{ employeeLabel(e) }}</option>
+              <option :value="andereWert">Andere Person (Name eingeben)</option>
+            </select>
+            <p v-if="formErrors.employee_id" id="oc-person-error" class="hrk-field-error">{{ formErrors.employee_id }}</p>
+            <p id="oc-person-hint" class="hrk-hint">
+              Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
+            </p>
+          </div>
+
+          <div v-if="freitextAktiv" class="hrk-field">
+            <label class="hrk-label" for="oc-name">{{ employees.length ? 'Vorname und Name' : 'Für wen ist die Checkliste?' }}</label>
             <input
               id="oc-name"
               v-model="form.employee_name"
@@ -129,9 +152,12 @@
               type="text"
               placeholder="z.B. Maria Muster"
               autocomplete="name"
+              :aria-invalid="formErrors.employee_name ? 'true' : null"
+              :aria-describedby="formErrors.employee_name ? 'oc-name-error' : (employees.length ? null : 'oc-name-hint')"
             />
-            <p v-if="formErrors.employee_name" role="alert" class="hrk-hint" style="color:var(--hrk-danger)">
-              {{ formErrors.employee_name }}
+            <p v-if="formErrors.employee_name" id="oc-name-error" class="hrk-field-error">{{ formErrors.employee_name }}</p>
+            <p v-if="!employees.length" id="oc-name-hint" class="hrk-hint">
+              Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
             </p>
           </div>
 
@@ -162,7 +188,7 @@
         <div v-else-if="templateItems.length">
           <h2 class="hrk-h2">Checklisten-Punkte wählen</h2>
           <p class="hrk-muted" style="margin-bottom:var(--hrk-space-4)">
-            Alle Punkte sind vorausgewählt — du kannst einzelne abwählen.
+            Alle Punkte sind vorausgewählt. Du kannst einzelne abwählen.
           </p>
 
           <div
@@ -208,7 +234,7 @@
         <div class="hrk-cta-bar" style="margin-top:var(--hrk-space-5)">
           <button
             class="hrk-btn hrk-btn--primary hrk-btn--block"
-            :disabled="creating || !form.employee_name.trim()"
+            :disabled="creating || !kannAnlegen"
             aria-label="Checkliste anlegen"
             @click="createChecklist"
           >
@@ -330,7 +356,7 @@
 
           <!-- Sync-Fehler (Status-Update fehlgeschlagen) -->
           <div v-if="syncError" class="hrk-note hrk-note--danger" role="alert" aria-live="polite" style="margin-top:var(--hrk-space-3)">
-            <p style="margin:0">Speichern hat nicht geklappt — versuch es nochmal.</p>
+            <p style="margin:0">Speichern hat nicht geklappt. Versuch es nochmals.</p>
           </div>
         </div>
 
@@ -381,8 +407,15 @@ export default {
       loadError: '',
 
       // Erstellen
-      form: { employee_name: '', start_date: '' },
+      form: { employee_id: '', employee_name: '', start_date: '' },
       formErrors: {},
+      // s2-B04: Personen aus get_user_employees; Freitext nur als Rückfall
+      employees: [],
+      employeesLoading: false,
+      andereWert: '__andere',
+      // W2 (Prüfung 24.09.2026): zuletzt automatisch gesetztes Eintrittsdatum. Nur ein Wert,
+      // der noch diesem entspricht (oder leer ist), wird beim Personenwechsel ersetzt.
+      startAuto: '',
       templateItems: [],
       selectedTemplateIds: new Set(),
       templatesLoading: false,
@@ -434,6 +467,33 @@ export default {
     },
     loginHref() {
       return (this.content && this.content.loginUrl) || '/anmelden';
+    },
+    // s2-B04: fester Pfad im Code (kein Property), ww-config-Defaults erreichen live nie.
+    eintrittHref() {
+      return '/vertrag-erstellen';
+    },
+
+    // s2-B04: Personenauswahl
+    sortedEmployees() {
+      return [...this.employees].sort((a, b) => {
+        const la = `${a.lastname || ''} ${a.firstname || ''}`.trim().toLowerCase();
+        const lb = `${b.lastname || ''} ${b.firstname || ''}`.trim().toLowerCase();
+        return la.localeCompare(lb, 'de-CH');
+      });
+    },
+    gewaehlteEmployee() {
+      const id = this.form.employee_id;
+      if (!id || id === this.andereWert) return null;
+      return this.employees.find((e) => String(e.id) === String(id)) || null;
+    },
+    // Freitext erscheint, wenn es keine Liste gibt (leer oder Ladefehler) oder «Andere Person» gewählt ist.
+    freitextAktiv() {
+      if (this.employeesLoading) return false;
+      return this.employees.length === 0 || this.form.employee_id === this.andereWert;
+    },
+    kannAnlegen() {
+      if (this.gewaehlteEmployee) return true;
+      return this.freitextAktiv && !!(this.form.employee_name || '').trim();
     },
 
     // Sortiert: offen → in_bearbeitung → abgeschlossen
@@ -491,6 +551,29 @@ export default {
     },
     'content.apiKey'(val, old) {
       if (val && val !== old) this.init();
+    },
+    // s2-B04: Eintrittsdatum aus dem Personenstamm vorbelegen (nur wenn noch leer),
+    // Fehler löschen, sobald eine Auswahl da ist.
+    'form.employee_id'(id) {
+      const e = this.gewaehlteEmployee;
+      // W2: beim Wechsel das Datum der neuen Person übernehmen, eine Handeingabe nie überschreiben.
+      if (!this.form.start_date || this.form.start_date === this.startAuto) {
+        const neu = e && e.employment_start ? String(e.employment_start).slice(0, 10) : '';
+        this.form.start_date = neu;
+        this.startAuto = neu;
+      }
+      if (id && this.formErrors.employee_id) {
+        const next = { ...this.formErrors };
+        delete next.employee_id;
+        this.formErrors = next;
+      }
+    },
+    'form.employee_name'(v) {
+      if (v && v.trim() && this.formErrors.employee_name) {
+        const next = { ...this.formErrors };
+        delete next.employee_name;
+        this.formErrors = next;
+      }
     },
   },
 
@@ -580,7 +663,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.loadError = 'Die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
-          this.loadError = 'Netzwerkfehler — bitte Internetverbindung prüfen und erneut versuchen.';
+          this.loadError = 'Netzwerkfehler. Bitte prüf deine Internetverbindung und versuch es nochmals.';
         }
       } finally {
         this.loading = false;
@@ -614,13 +697,42 @@ export default {
 
     /* ──────────────────── ERSTELLEN ──────────────────── */
     startCreate() {
-      this.form        = { employee_name: '', start_date: '' };
+      this.form        = { employee_id: '', employee_name: '', start_date: '' };
+      this.startAuto   = '';
       this.formErrors  = {};
       this.createError = '';
       this.linkHinweis = '';
       this.selectedTemplateIds = new Set();
       this.view = 'create';
       this.loadTemplates();
+      this.loadEmployees();
+    },
+
+    employeeLabel(e) {
+      const name = `${(e && e.firstname) || ''} ${(e && e.lastname) || ''}`.trim() || 'Ohne Namen';
+      return e && e.employment_start ? `${name} (Eintritt ${this.formatDate(e.employment_start)})` : name;
+    },
+
+    // s2-B04: dieselbe Quelle wie Dossier, Zeiterfassung und Dienstplan. get_user_employees()
+    // ist SECURITY DEFINER und filtert serverseitig auf auth.uid(). Schlägt das Laden fehl,
+    // bleibt die Liste leer und das Freitextfeld erscheint als Rückfall.
+    async loadEmployees() {
+      this.employeesLoading = true;
+      this.employees = [];
+      try {
+        const url = `${this.baseUrl}/rest/v1/rpc/get_user_employees?select=id,firstname,lastname,employment_start&order=lastname.asc,firstname.asc`;
+        const res = await this.fetchWithTimeout(url, { headers: { ...this.authHeaders, Accept: 'application/json' } });
+        if (!res.ok) {
+          console.warn('[onboarding-checkliste] Mitarbeitende laden HTTP', res.status);
+          return;
+        }
+        const rows = await res.json().catch(() => []);
+        this.employees = Array.isArray(rows) ? rows.filter((r) => r && r.id) : [];
+      } catch (err) {
+        console.warn('[onboarding-checkliste] Mitarbeitende laden fehlgeschlagen', err && err.name);
+      } finally {
+        this.employeesLoading = false;
+      }
     },
 
     async loadTemplates() {
@@ -667,30 +779,71 @@ export default {
       this.formErrors  = {};
       this.createError = '';
 
-      const nameTrimmed = this.form.employee_name.trim();
+      // s2-B04: Person kommt aus der Auswahl (employee_id), Freitext nur als Rückfall.
+      const emp = this.gewaehlteEmployee;
+      if (!emp && !this.freitextAktiv) {
+        this.formErrors = { employee_id: 'Bitte wähl die Person aus.' };
+        return;
+      }
+      const nameTrimmed = emp
+        ? `${emp.firstname || ''} ${emp.lastname || ''}`.trim()
+        : (this.form.employee_name || '').trim();
       if (!nameTrimmed) {
-        this.formErrors = { employee_name: 'Bitte gib Vorname und Name ein.' };
+        this.formErrors = emp
+          ? { employee_id: 'Bei dieser Person fehlt der Name. Ergänz ihn zuerst unter Mitarbeitende.' }
+          : { employee_name: 'Bitte gib Vorname und Name ein.' };
         return;
       }
 
-      // Audit-Fund 2.1: der Vertrag-Wizard legte fuer dieselbe Person eine zweite,
-      // nicht verknuepfte Checkliste an. Vor dem Anlegen auf bestehende Checkliste
-      // desselben Namens pruefen (case-/leerzeichen-unabhaengig) und diese oeffnen
-      // statt eine Dublette zu erzeugen.
+      // Audit-Fund 2.1 / s2-B04: keine zweite Checkliste für dieselbe Person. Mit gewählter
+      // Person zählt die employee_id (auto-create-onboarding und onboarding-start prüfen
+      // ebenfalls über employee_id). K4 (Prüfung 24.09.2026): eine Altliste OHNE employee_id
+      // zählt nur als Rückfall, wenn ihr Name exakt passt und genau eine erfasste Person so
+      // heisst; sonst entsteht eine neue Liste (kein Namensvetter wird verknüpft).
+      // Freitext-Rückfall: wie bisher über den Namen (case-/leerzeichen-unabhängig).
       const nameNorm = nameTrimmed.toLowerCase();
-      const bestehende = this.checklists.find((c) => (c.employee_name || '').trim().toLowerCase() === nameNorm);
+      const gleicherName = (c) => (c.employee_name || '').trim().toLowerCase() === nameNorm;
+      const empName = (x) => `${(x && x.firstname) || ''} ${(x && x.lastname) || ''}`.trim();
+      const namensvetter = emp ? this.employees.filter((x) => empName(x) === nameTrimmed).length : 0;
+      const bestehende = emp
+        ? (this.checklists.find((c) => c.employee_id && String(c.employee_id) === String(emp.id))
+          || (namensvetter === 1 ? this.checklists.find((c) => !c.employee_id && (c.employee_name || '').trim() === nameTrimmed) : null))
+        : this.checklists.find(gleicherName);
       if (bestehende) {
-        this.form = { employee_name: '', start_date: '' };
-        this.linkHinweis = `Für ${bestehende.employee_name} gab es bereits eine Checkliste — die ist hier verknüpft, keine zweite wurde angelegt.`;
-        await this.openChecklist(bestehende, { keepHint: true });
+        await this._bestehendeOeffnen(bestehende);
         return;
       }
 
       this.creating = true;
       try {
+        // K5 (Prüfung 24.09.2026): die Liste auf der Seite kann veraltet sein, weil
+        // auto-create-onboarding für neue Personen selbst eine Checkliste anlegt. Vor dem
+        // Anlegen frisch nachsehen. Schlägt die Abfrage fehl, wird normal angelegt.
+        if (emp) {
+          try {
+            const chk = await this.fetchWithTimeout(
+              `${this.baseUrl}/rest/v1/onboarding_checklists?employee_id=eq.${encodeURIComponent(emp.id)}&select=*&order=created_at.asc&limit=1`,
+              { headers: this.authHeaders }
+            );
+            if (chk.ok) {
+              const rows = await chk.json().catch(() => []);
+              if (Array.isArray(rows) && rows.length) {
+                await this.loadChecklists();
+                await this._bestehendeOeffnen(this.checklists.find((c) => c.id === rows[0].id) || rows[0]);
+                return;
+              }
+            } else {
+              console.warn('[onboarding-checkliste] Vorab-Prüfung HTTP', chk.status);
+            }
+          } catch (e) {
+            console.warn('[onboarding-checkliste] Vorab-Prüfung fehlgeschlagen', e && e.name);
+          }
+        }
         // 1. Checkliste anlegen
         const body = {
-          employee_name: this.form.employee_name.trim(),
+          employee_name: nameTrimmed,
+          // s2-B04: Spalte existiert live (uuid, nullable, ohne Fremdschlüssel), geprüft 24.09.2026.
+          ...(emp ? { employee_id: emp.id } : {}),
           status: 'offen',
           ...(this.form.start_date ? { start_date: this.form.start_date } : {}),
           // user_id ist NOT NULL + RLS WITH CHECK auth.uid() = user_id.
@@ -707,7 +860,7 @@ export default {
         );
 
         if (clRes.status === 401 || clRes.status === 403) {
-          this.createError = 'Sitzung abgelaufen — bitte erneut anmelden.';
+          this.createError = 'Deine Sitzung ist abgelaufen. Bitte melde dich neu an.';
           return;
         }
         if (!clRes.ok) {
@@ -757,13 +910,20 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.createError = 'Das hat zu lange gedauert — versuch es nochmals.';
+          this.createError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
           this.createError = 'Netzwerkfehler beim Anlegen der Checkliste.';
         }
       } finally {
         this.creating = false;
       }
+    },
+
+    async _bestehendeOeffnen(cl) {
+      this.form = { employee_id: '', employee_name: '', start_date: '' };
+      this.startAuto = '';
+      this.linkHinweis = `Für ${cl.employee_name} gibt es schon eine Checkliste. Du siehst sie hier, eine zweite haben wir nicht angelegt.`;
+      await this.openChecklist(cl, { keepHint: true });
     },
 
     /* ──────────────────── DETAIL ──────────────────── */
@@ -800,7 +960,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.itemsError = 'Das hat zu lange gedauert — versuch es nochmals.';
+          this.itemsError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
           this.itemsError = 'Netzwerkfehler beim Laden der Punkte.';
         }
@@ -863,7 +1023,7 @@ export default {
 
       } catch (err) {
         if (err && err.name === 'AbortError') {
-          this.toggleError = 'Das hat zu lange gedauert — versuch es nochmals.';
+          this.toggleError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
           this.toggleError = 'Netzwerkfehler beim Speichern.';
         }
@@ -1039,6 +1199,9 @@ export default {
 }
 .hrk-input:focus, .hrk-select:focus { outline: none; border-color: var(--hrk-schiefer); box-shadow: var(--hrk-focus-ring); }
 .hrk-input--error { border-color: var(--hrk-danger); }
+.hrk-field-error { color: var(--hrk-danger); font-size: var(--hrk-fs-small); font-weight: var(--hrk-fw-medium); margin: var(--hrk-space-1) 0 0; }
+.hrk-link { color: var(--hrk-bordeaux); text-decoration: underline; text-underline-offset: 2px; }
+.hrk-link:hover { color: var(--hrk-bordeaux-dark); }
 
 /* Karten */
 .hrk-card { background: var(--hrk-surface); border: 1px solid var(--hrk-border);

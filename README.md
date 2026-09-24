@@ -32,7 +32,7 @@ WeWeb Coded Component für **Imploya / HRklar** — Onboarding-Checkliste für n
 ## Drei Ansichten
 
 1. **Liste** — Alle Checklisten des Users mit Fortschrittsbalken, sortiert offen → in Bearbeitung → abgeschlossen
-2. **Erstellen** — Formular (Name, Eintrittsdatum) + Vorauswahl der Template-Items
+2. **Erstellen** — «Für wen ist die Checkliste?»: Auswahl aus den erfassten Mitarbeitenden (RPC `get_user_employees`, schreibt `employee_id` mit, Eintrittsdatum wird vorbelegt), Freitext nur als Rückfall («Andere Person» oder leere Liste); Link «Eintritt erfassen» → `/vertrag-erstellen`. Keine zweite Checkliste pro `employee_id`: vor dem Anlegen wird frisch nachgesehen (auto-create-onboarding legt selbst Listen an). Eine Altliste ohne `employee_id` zählt nur, wenn ihr Name exakt passt und genau eine erfasste Person so heisst. Das Eintrittsdatum wird beim Personenwechsel neu vorbelegt, eine Handeingabe bleibt. Seit 24.09.2026 (Vollaudit s2-B04), sichtbarer Name «Eintritts-Checkliste».
 3. **Detail** — Items einer Checkliste abhaken, gruppiert nach Kategorie
 
 ## Backend-Tabellen
