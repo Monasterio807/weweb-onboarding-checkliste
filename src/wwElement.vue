@@ -102,11 +102,6 @@
             </p>
           </div>
         </div>
-
-        <!-- Zurück -->
-        <div v-if="backHref" style="margin-top:var(--hrk-space-6)">
-          <a class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück</a>
-        </div>
       </div>
 
       <!-- ====== ANSICHT: ERSTELLEN ====== -->
