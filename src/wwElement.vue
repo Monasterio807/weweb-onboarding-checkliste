@@ -37,7 +37,6 @@
         <div v-else-if="authError" class="hrk-state" role="alert" aria-live="assertive">
           <p class="hrk-state__title">Bitte melde dich an, um deine Checklisten zu sehen.</p>
           <a class="hrk-btn hrk-btn--primary" :href="loginHref">Anmelden</a>
-          <a v-if="content && content.backUrl" class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück</a>
         </div>
 
         <!-- Netzwerk-/Ladefehler -->
@@ -355,10 +354,6 @@
           </div>
         </div>
 
-        <!-- Zurück (Desktop) -->
-        <div v-if="backHref" style="margin-top:var(--hrk-space-6)">
-          <a class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück zur Übersicht</a>
-        </div>
       </div>
 
     </main>
