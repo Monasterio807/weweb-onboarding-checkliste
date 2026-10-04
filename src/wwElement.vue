@@ -873,17 +873,42 @@ export default {
             sort_order:   t.sort_order || 0,
             is_done:      false,
           }));
-          const itemRes = await this.fetchWithTimeout(
-            `${this.baseUrl}/rest/v1/onboarding_checklist_items`,
-            {
-              method: 'POST',
-              headers: { ...this.authHeaders, 'Prefer': 'return=minimal' },
-              body: JSON.stringify(itemsPayload),
+          let itemsOk = false;
+          try {
+            const itemRes = await this.fetchWithTimeout(
+              `${this.baseUrl}/rest/v1/onboarding_checklist_items`,
+              {
+                method: 'POST',
+                headers: { ...this.authHeaders, 'Prefer': 'return=minimal' },
+                body: JSON.stringify(itemsPayload),
+              }
+            );
+            itemsOk = !!itemRes.ok;
+            if (!itemsOk) console.warn('[onboarding-checkliste] items insert HTTP', itemRes.status);
+          } catch (e) {
+            console.warn('[onboarding-checkliste] items insert fehlgeschlagen', e && e.name);
+          }
+          if (!itemsOk) {
+            // Cloud-Fund A1-04-020: eine leere Checkliste lässt sich in der Oberfläche nicht
+            // füllen, und die Dubletten-Prüfung würde jedes neue Anlegen darauf umleiten.
+            // Darum die eben angelegte Checkliste zurücknehmen (Punkte hängen per CASCADE dran)
+            // und den Fehler zeigen, statt «angelegt» zu melden.
+            let zurueck = false;
+            try {
+              const delRes = await this.fetchWithTimeout(
+                `${this.baseUrl}/rest/v1/onboarding_checklists?id=eq.${encodeURIComponent(checklistId)}`,
+                { method: 'DELETE', headers: { ...this.authHeaders, 'Prefer': 'return=minimal' } }
+              );
+              zurueck = !!delRes.ok;
+              if (!zurueck) console.warn('[onboarding-checkliste] Rücknahme HTTP', delRes.status);
+            } catch (e) {
+              console.warn('[onboarding-checkliste] Rücknahme fehlgeschlagen', e && e.name);
             }
-          );
-          if (!itemRes.ok) {
-            console.warn('[onboarding-checkliste] items insert partial HTTP', itemRes.status);
-            // Checkliste ist angelegt — trotzdem weiterfahren, Items lassen sich nachträglich hinzufügen
+            this.createError = zurueck
+              ? 'Die Punkte der Checkliste konnten nicht angelegt werden. Es wurde nichts gespeichert. Versuch es nochmals.'
+              : 'Die Punkte der Checkliste konnten nicht angelegt werden, und die leere Checkliste liess sich nicht zurücknehmen. Bitte melde dich bei uns, bevor du es nochmals versuchst.';
+            await this.loadChecklists();
+            return;
           }
         }
 
