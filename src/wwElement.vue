@@ -653,7 +653,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.loadError = 'Die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
-          this.loadError = 'Netzwerkfehler. Bitte prüf deine Internetverbindung und versuch es nochmals.';
+          this.loadError = 'Die Verbindung hat nicht geklappt. Prüf dein Internet und versuch es nochmals.';
         }
       } finally {
         this.loading = false;
@@ -737,7 +737,7 @@ export default {
           headers: this.authHeaders,
         });
         if (!res.ok) {
-          this.templateError = `Vorlagen konnten nicht geladen werden.`;
+          this.templateError = 'Die Vorlagen konnten nicht geladen werden. Versuch es nochmals.';
           return;
         }
         const data = await res.json();
@@ -748,7 +748,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.templateError = 'Das Laden der Vorlagen hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
-          this.templateError = 'Netzwerkfehler beim Laden der Vorlagen.';
+          this.templateError = 'Die Vorlagen konnten nicht geladen werden. Prüf dein Internet und versuch es nochmals.';
         }
       } finally {
         this.templatesLoading = false;
@@ -902,7 +902,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.createError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
-          this.createError = 'Netzwerkfehler beim Anlegen der Checkliste.';
+          this.createError = 'Die Checkliste wurde nicht angelegt. Prüf dein Internet und versuch es nochmals.';
         }
       } finally {
         this.creating = false;
@@ -952,7 +952,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.itemsError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
-          this.itemsError = 'Netzwerkfehler beim Laden der Punkte.';
+          this.itemsError = 'Die Punkte konnten nicht geladen werden. Prüf dein Internet und versuch es nochmals.';
         }
       } finally {
         this.itemsLoading = false;
@@ -1015,7 +1015,7 @@ export default {
         if (err && err.name === 'AbortError') {
           this.toggleError = 'Das hat zu lange gedauert. Versuch es nochmals.';
         } else {
-          this.toggleError = 'Netzwerkfehler beim Speichern.';
+          this.toggleError = 'Der Punkt wurde nicht gespeichert. Prüf dein Internet und versuch es nochmals.';
         }
         // Rollback: UI-State zurücksetzen (Netzwerkfehler = kein PATCH durchgekommen)
         const catchIdx = this.items.findIndex(i => i.id === item.id);
