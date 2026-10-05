@@ -995,6 +995,16 @@ export default {
       const newDone = !item.is_done;
       const nowIso  = new Date().toISOString();
 
+      // Optimistisch umschalten (UI sofort), bei Fehler unten zurücknehmen
+      const optIdx = this.items.findIndex(i => i.id === item.id);
+      if (optIdx !== -1) {
+        this.items = [
+          ...this.items.slice(0, optIdx),
+          { ...this.items[optIdx], is_done: newDone, done_at: newDone ? nowIso : null },
+          ...this.items.slice(optIdx + 1),
+        ];
+      }
+
       try {
         const patch = {
           is_done: newDone,
@@ -1021,16 +1031,6 @@ export default {
             ];
           }
           return;
-        }
-
-        // Optimistisch updaten (nach erfolgreichem PATCH)
-        const idx = this.items.findIndex(i => i.id === item.id);
-        if (idx !== -1) {
-          this.items = [
-            ...this.items.slice(0, idx),
-            { ...this.items[idx], is_done: newDone, done_at: newDone ? nowIso : null },
-            ...this.items.slice(idx + 1),
-          ];
         }
 
         this._updateChecklistStatus();
