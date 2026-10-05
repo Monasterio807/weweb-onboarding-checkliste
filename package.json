@@ -1,7 +1,7 @@
 {
   "name": "weweb-onboarding-checkliste",
   "version": "1.0.0",
-  "description": "WeWeb Coded Component – Onboarding-Checkliste (Imploya / HRklar): Neue Mitarbeitende onboarden mit abhakbarer Checkliste, Fortschrittsanzeige und Kategorie-Gruppen.",
+  "description": "WeWeb Coded Component – Onboarding-Checkliste (imploya / HRklar): Neue Mitarbeitende onboarden mit abhakbarer Checkliste, Fortschrittsanzeige und Kategorie-Gruppen.",
   "private": true,
   "scripts": {
     "build": "weweb build name=onboarding-checkliste type=wwobject",

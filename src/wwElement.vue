@@ -362,7 +362,7 @@
 
 <script>
 /**
- * WeWeb Coded Component — coded-component-onboarding-checkliste (Imploya / HRklar)
+ * WeWeb Coded Component — coded-component-onboarding-checkliste (imploya / HRklar)
  *
  * Drei Ansichten:
  *  1. Liste   — alle Onboarding-Checklisten des Users
