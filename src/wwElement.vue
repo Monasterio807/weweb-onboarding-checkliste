@@ -1,356 +1,387 @@
 <template>
   <div class="hrk-root">
-    <main class="hrk-page">
+    <main class="oc-main">
 
       <!-- ====== ANSICHT: LISTE ====== -->
       <div v-if="view === 'list'">
-        <header class="hrk-record-head">
-          <div class="hrk-record-head__main">
-            <h1 class="hrk-h1 hrk-record-head__name">Eintritts-Checklisten</h1>
-            <p v-if="!loading && !authError && !loadError" class="hrk-muted hrk-record-head__type">
-              {{ checklists.length === 0 ? 'Noch keine Checkliste angelegt' : checklists.length + ' ' + (checklists.length === 1 ? 'Checkliste' : 'Checklisten') }}
-            </p>
-          </div>
-          <div class="hrk-actions">
-            <button
-              class="hrk-btn hrk-btn--ghost"
-              :disabled="loading"
-              aria-label="Aktualisieren"
-              @click="loadChecklists"
-            ><svg class="hrk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20,4 20,9 15,9"/></svg></button>
-            <button
-              v-if="!authError"
-              class="hrk-btn hrk-btn--primary"
-              aria-label="Neue Checkliste anlegen"
-              @click="startCreate"
-            >+ Neue Checkliste</button>
+        <header class="oc-top">
+          <div class="oc-wrap oc-head">
+            <div class="oc-head__main">
+              <p v-if="!loading && !authError && !loadError" class="oc-lab">
+                {{ checklists.length === 0 ? 'Noch keine Checkliste angelegt' : checklists.length + ' ' + (checklists.length === 1 ? 'Checkliste' : 'Checklisten') }}
+              </p>
+              <h1 class="oc-h1">Eintritts-Checklisten</h1>
+            </div>
+            <div class="oc-head__act">
+              <button
+                class="oc-bk"
+                :disabled="loading"
+                aria-label="Aktualisieren"
+                @click="loadChecklists"
+              ><svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20,4 20,9 15,9"/></svg><span>Aktualisieren</span></button>
+              <!-- eine Hauptaktion pro Seite: im Leerzustand sitzt sie im Leerzustand selbst -->
+              <button
+                v-if="!authError && (loading || loadError || checklists.length > 0)"
+                class="oc-fw"
+                aria-label="Neue Checkliste anlegen"
+                @click="startCreate"
+              >Neue Checkliste<svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></svg></button>
+            </div>
           </div>
         </header>
 
         <!-- Laden -->
-        <div v-if="loading" class="hrk-state" aria-live="polite">
-          <div class="hrk-spinner" aria-hidden="true"></div>
-          <p class="hrk-muted">Checklisten werden geladen …</p>
+        <div v-if="loading" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state" aria-live="polite">
+            <div class="hrk-spinner" aria-hidden="true"></div>
+            <p class="hrk-muted">Checklisten werden geladen …</p>
+          </div>
         </div>
 
         <!-- Auth-Fehler -->
-        <div v-else-if="authError" class="hrk-state" role="alert" aria-live="assertive">
-          <p class="hrk-state__title">Bitte melde dich an, um deine Checklisten zu sehen.</p>
-          <a class="hrk-btn hrk-btn--primary" :href="loginHref">Anmelden</a>
+        <div v-else-if="authError" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state" role="alert" aria-live="assertive">
+            <p class="hrk-state__title">Bitte melde dich an, um deine Checklisten zu sehen.</p>
+            <a class="oc-fw" :href="loginHref">Anmelden</a>
+          </div>
         </div>
 
         <!-- Netzwerk-/Ladefehler -->
-        <div v-else-if="loadError" class="hrk-state" role="alert" aria-live="assertive">
-          <p class="hrk-state__title">{{ loadError }}</p>
-          <button class="hrk-btn hrk-btn--secondary" @click="loadChecklists">Erneut versuchen</button>
+        <div v-else-if="loadError" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state" role="alert" aria-live="assertive">
+            <p class="hrk-state__title">{{ loadError }}</p>
+            <button class="oc-bk" @click="loadChecklists">Erneut versuchen</button>
+          </div>
         </div>
 
         <!-- Leer -->
-        <div v-else-if="checklists.length === 0" class="hrk-empty">
-          <svg class="hrk-icon hrk-icon--lg hrk-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12.5 11,15.5 16.5,9.5"/></svg>
-          <p class="hrk-state__title" style="margin:var(--hrk-space-2) 0 0">Noch keine Checkliste angelegt</p>
-          <p class="hrk-muted" style="margin:var(--hrk-space-1) 0 var(--hrk-space-4)">
-            Leg für neue Mitarbeitende eine Checkliste an und hake beim Eintritt Punkt für Punkt ab.
-          </p>
-          <button class="hrk-btn hrk-btn--primary" @click="startCreate">+ Erste Checkliste anlegen</button>
-        </div>
-
-        <!-- Liste -->
-        <div v-else class="hrk-stack" style="margin-top:var(--hrk-space-5)">
-          <div
-            v-for="cl in sortedChecklists"
-            :key="cl.id"
-            class="hrk-card"
-            style="cursor:pointer"
-            role="button"
-            tabindex="0"
-            :aria-label="'Checkliste für ' + cl.employee_name + ' öffnen'"
-            @click="openChecklist(cl)"
-            @keydown.enter="openChecklist(cl)"
-            @keydown.space.prevent="openChecklist(cl)"
-          >
-            <div class="hrk-record-head" style="margin-bottom:var(--hrk-space-3)">
-              <div class="hrk-record-head__main">
-                <h2 class="hrk-h2" style="margin:0 0 var(--hrk-space-1)">{{ cl.employee_name }}</h2>
-                <p class="hrk-muted hrk-small" style="margin:0">
-                  Eintritt: {{ cl.start_date ? formatDate(cl.start_date) : '–' }}
-                </p>
-              </div>
-              <span class="hrk-badge" :class="statusBadge(cl.status).cls">
-                {{ statusBadge(cl.status).label }}
-              </span>
-            </div>
-
-            <!-- Fortschrittsbalken -->
-            <div
-              v-if="cl._stats"
-              style="margin-top:var(--hrk-space-2)"
-              :aria-label="cl._stats.done + ' von ' + cl._stats.total + ' Punkte erledigt'"
-            >
-              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--hrk-space-1)">
-                <span class="hrk-muted hrk-small">{{ cl._stats.done }}&thinsp;/&thinsp;{{ cl._stats.total }} erledigt</span>
-                <span class="hrk-muted hrk-small hrk-num">{{ cl._stats.pct }}%</span>
-              </div>
-              <div class="progress-track" role="progressbar" :aria-valuenow="cl._stats.pct" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar" :style="{ width: cl._stats.pct + '%' }"></div>
-              </div>
-            </div>
-
-            <p class="hrk-muted hrk-small" style="margin:var(--hrk-space-3) 0 0;text-align:right">
-              Angelegt: {{ formatDate(cl.created_at) }}
+        <div v-else-if="checklists.length === 0" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state">
+            <svg class="hrk-icon hrk-icon--lg oc-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"/><polyline points="8,12.5 11,15.5 16.5,9.5"/></svg>
+            <p class="hrk-state__title">Noch keine Checkliste angelegt</p>
+            <p class="hrk-muted">
+              Leg für neue Mitarbeitende eine Checkliste an und hake beim Eintritt Punkt für Punkt ab.
             </p>
+            <button class="oc-fw oc-fw--lg" @click="startCreate">Erste Checkliste anlegen<svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></svg></button>
           </div>
         </div>
+
+        <!-- Liste: Zeilen mit Haarlinien statt Karten -->
+        <section v-else class="oc-band oc-band--grau">
+          <div class="oc-wrap oc-grp">
+            <div class="oc-grp__lab">
+              <span class="oc-nr" aria-hidden="true">01</span>
+              <h2 class="oc-gt">Checklisten</h2>
+            </div>
+            <div class="oc-grp__body oc-rows">
+              <div
+                v-for="cl in sortedChecklists"
+                :key="cl.id"
+                class="oc-row"
+                role="button"
+                tabindex="0"
+                :aria-label="'Checkliste für ' + cl.employee_name + ' öffnen'"
+                @click="openChecklist(cl)"
+                @keydown.enter="openChecklist(cl)"
+                @keydown.space.prevent="openChecklist(cl)"
+              >
+                <div class="oc-row__head">
+                  <div class="oc-row__main">
+                    <h3 class="oc-row__name">{{ cl.employee_name }}</h3>
+                    <p class="oc-row__meta">
+                      Eintritt: {{ cl.start_date ? formatDate(cl.start_date) : '–' }}
+                      <span class="oc-row__dot" aria-hidden="true">·</span>
+                      Angelegt: {{ formatDate(cl.created_at) }}
+                    </p>
+                  </div>
+                  <span class="hrk-badge" :class="statusBadge(cl.status).cls">
+                    {{ statusBadge(cl.status).label }}
+                  </span>
+                </div>
+
+                <!-- Fortschritt: feine Linie -->
+                <div
+                  v-if="cl._stats"
+                  class="oc-prog"
+                  :aria-label="cl._stats.done + ' von ' + cl._stats.total + ' Punkte erledigt'"
+                >
+                  <div class="oc-prog__txt">
+                    <span class="hrk-small hrk-muted">{{ cl._stats.done }}&thinsp;/&thinsp;{{ cl._stats.total }} erledigt</span>
+                    <span class="hrk-small hrk-muted hrk-num">{{ cl._stats.pct }}%</span>
+                  </div>
+                  <div class="oc-track" role="progressbar" :aria-valuenow="cl._stats.pct" aria-valuemin="0" aria-valuemax="100">
+                    <div class="oc-bar" :style="{ width: cl._stats.pct + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <!-- ====== ANSICHT: ERSTELLEN ====== -->
       <div v-else-if="view === 'create'">
-        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'">Zurück</button>
-        <h1 class="hrk-h1" style="margin-bottom:var(--hrk-space-5)">Neue Eintritts-Checkliste</h1>
+        <header class="oc-top">
+          <div class="oc-wrap">
+            <button class="oc-bk oc-back" @click="view = 'list'"><svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="20" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></svg>Zurück</button>
+            <h1 class="oc-h1">Neue Eintritts-Checkliste</h1>
+          </div>
+        </header>
 
         <!-- Formular -->
-        <div class="hrk-card hrk-stack">
-          <!-- s2-B04: Person aus den Mitarbeitenden wählen, Freitext nur als Rückfall -->
-          <div v-if="employeesLoading" class="hrk-field" aria-live="polite">
-            <p class="hrk-label" style="margin:0">Für wen ist die Checkliste?</p>
-            <p class="hrk-muted hrk-small" style="margin:0">Mitarbeitende werden geladen …</p>
-          </div>
+        <section class="oc-band oc-band--grau">
+          <div class="oc-wrap oc-grp">
+            <div class="oc-grp__lab">
+              <span class="oc-nr" aria-hidden="true">01</span>
+              <h2 class="oc-gt">Angaben</h2>
+            </div>
+            <div class="oc-grp__body">
+              <!-- s2-B04: Person aus den Mitarbeitenden wählen, Freitext nur als Rückfall -->
+              <div v-if="employeesLoading" class="hrk-field" aria-live="polite">
+                <p class="hrk-label">Für wen ist die Checkliste?</p>
+                <p class="hrk-muted hrk-small oc-m0">Mitarbeitende werden geladen …</p>
+              </div>
 
-          <div v-else-if="employees.length" class="hrk-field">
-            <label class="hrk-label" for="oc-person">Für wen ist die Checkliste?</label>
-            <select
-              id="oc-person"
-              v-model="form.employee_id"
-              class="hrk-select"
-              :class="{ 'hrk-input--error': formErrors.employee_id }"
-              :aria-invalid="formErrors.employee_id ? 'true' : null"
-              :aria-describedby="formErrors.employee_id ? 'oc-person-error oc-person-hint' : 'oc-person-hint'"
-            >
-              <option value="">Bitte wählen</option>
-              <option v-for="e in sortedEmployees" :key="e.id" :value="e.id">{{ employeeLabel(e) }}</option>
-              <option :value="andereWert">Andere Person (Name eingeben)</option>
-            </select>
-            <p v-if="formErrors.employee_id" id="oc-person-error" class="hrk-field-error">{{ formErrors.employee_id }}</p>
-            <p id="oc-person-hint" class="hrk-hint">
-              Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
-            </p>
-          </div>
+              <div v-else-if="employees.length" class="hrk-field">
+                <label class="hrk-label" for="oc-person">Für wen ist die Checkliste?</label>
+                <select
+                  id="oc-person"
+                  v-model="form.employee_id"
+                  class="hrk-select"
+                  :class="{ 'hrk-input--error': formErrors.employee_id }"
+                  :aria-invalid="formErrors.employee_id ? 'true' : null"
+                  :aria-describedby="formErrors.employee_id ? 'oc-person-error oc-person-hint' : 'oc-person-hint'"
+                >
+                  <option value="">Bitte wählen</option>
+                  <option v-for="e in sortedEmployees" :key="e.id" :value="e.id">{{ employeeLabel(e) }}</option>
+                  <option :value="andereWert">Andere Person (Name eingeben)</option>
+                </select>
+                <p v-if="formErrors.employee_id" id="oc-person-error" class="hrk-field-error">{{ formErrors.employee_id }}</p>
+                <p id="oc-person-hint" class="hrk-hint">
+                  Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
+                </p>
+              </div>
 
-          <div v-if="freitextAktiv" class="hrk-field">
-            <label class="hrk-label" for="oc-name">{{ employees.length ? 'Vorname und Name' : 'Für wen ist die Checkliste?' }}</label>
-            <input
-              id="oc-name"
-              v-model="form.employee_name"
-              class="hrk-input"
-              :class="{ 'hrk-input--error': formErrors.employee_name }"
-              type="text"
-              placeholder="z.B. Maria Muster"
-              autocomplete="name"
-              :aria-invalid="formErrors.employee_name ? 'true' : null"
-              :aria-describedby="formErrors.employee_name ? 'oc-name-error' : (employees.length ? null : 'oc-name-hint')"
-            />
-            <p v-if="formErrors.employee_name" id="oc-name-error" class="hrk-field-error">{{ formErrors.employee_name }}</p>
-            <p v-if="!employees.length" id="oc-name-hint" class="hrk-hint">
-              Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
-            </p>
-          </div>
+              <div v-if="freitextAktiv" class="hrk-field">
+                <label class="hrk-label" for="oc-name">{{ employees.length ? 'Vorname und Name' : 'Für wen ist die Checkliste?' }}</label>
+                <input
+                  id="oc-name"
+                  v-model="form.employee_name"
+                  class="hrk-input"
+                  :class="{ 'hrk-input--error': formErrors.employee_name }"
+                  type="text"
+                  placeholder="z.B. Maria Muster"
+                  autocomplete="name"
+                  :aria-invalid="formErrors.employee_name ? 'true' : null"
+                  :aria-describedby="formErrors.employee_name ? 'oc-name-error' : (employees.length ? null : 'oc-name-hint')"
+                />
+                <p v-if="formErrors.employee_name" id="oc-name-error" class="hrk-field-error">{{ formErrors.employee_name }}</p>
+                <p v-if="!employees.length" id="oc-name-hint" class="hrk-hint">
+                  Neue Person? Zuerst unter <a class="hrk-link" :href="eintrittHref">Eintritt erfassen</a> anlegen.
+                </p>
+              </div>
 
-          <div class="hrk-field">
-            <label class="hrk-label" for="oc-date">Eintrittsdatum</label>
-            <input
-              id="oc-date"
-              v-model="form.start_date"
-              class="hrk-input"
-              type="date"
-            />
-          </div>
-        </div>
-
-        <!-- Template-Items laden / anzeigen -->
-        <div v-if="templatesLoading" class="hrk-state hrk-state--mini" aria-live="polite">
-          <div class="hrk-spinner" aria-hidden="true"></div>
-          <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
-        </div>
-
-        <div v-else-if="templateError" class="hrk-note hrk-note--warn" role="alert">
-          <p style="margin:0">{{ templateError }}</p>
-          <button class="hrk-btn hrk-btn--ghost" style="margin-top:var(--hrk-space-2)" @click="loadTemplates">
-            Erneut versuchen
-          </button>
-        </div>
-
-        <div v-else-if="templateItems.length">
-          <h2 class="hrk-h2">Checklisten-Punkte wählen</h2>
-          <p class="hrk-muted" style="margin-bottom:var(--hrk-space-4)">
-            Alle Punkte sind vorausgewählt. Du kannst einzelne abwählen.
-          </p>
-
-          <div
-            v-for="cat in templateCategories"
-            :key="cat"
-            class="hrk-card"
-            style="margin-bottom:var(--hrk-space-3)"
-          >
-            <h3 class="hrk-h3" style="margin-top:0">{{ cat }}</h3>
-            <div
-              v-for="item in templatesByCategory[cat]"
-              :key="item.id"
-              class="checklist-item-select"
-              :class="{ 'checklist-item-select--active': selectedTemplateIds.has(item.id) }"
-              role="checkbox"
-              :aria-checked="selectedTemplateIds.has(item.id)"
-              tabindex="0"
-              @click="toggleTemplate(item.id)"
-              @keydown.space.prevent="toggleTemplate(item.id)"
-              @keydown.enter="toggleTemplate(item.id)"
-            >
-              <span class="checklist-checkbox" :class="{ 'checklist-checkbox--checked': selectedTemplateIds.has(item.id) }">
-                <svg v-if="selectedTemplateIds.has(item.id)" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
-              </span>
-              <div>
-                <span class="checklist-item-title">{{ item.title }}</span>
-                <span v-if="item.description" class="hrk-muted hrk-small" style="display:block">{{ item.description }}</span>
+              <div class="hrk-field oc-field-date">
+                <label class="hrk-label" for="oc-date">Eintrittsdatum</label>
+                <input
+                  id="oc-date"
+                  v-model="form.start_date"
+                  class="hrk-input"
+                  type="date"
+                />
               </div>
             </div>
           </div>
+        </section>
 
-          <p class="hrk-muted hrk-small" style="margin-top:var(--hrk-space-2)">
-            {{ selectedTemplateIds.size }} von {{ templateItems.length }} Punkte ausgewählt
-          </p>
-        </div>
+        <!-- Template-Items laden / anzeigen -->
+        <section v-if="templatesLoading || templateError || templateItems.length" class="oc-band oc-band--weiss">
+          <div class="oc-wrap oc-grp">
+            <div class="oc-grp__lab">
+              <span class="oc-nr" aria-hidden="true">02</span>
+              <h2 class="oc-gt">Checklisten-Punkte wählen</h2>
+              <p v-if="templateItems.length && !templatesLoading && !templateError" class="oc-gd">Alle Punkte sind vorausgewählt. Du kannst einzelne abwählen.</p>
+            </div>
+            <div class="oc-grp__body">
+              <div v-if="templatesLoading" class="hrk-state hrk-state--mini" aria-live="polite">
+                <div class="hrk-spinner" aria-hidden="true"></div>
+                <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
+              </div>
+
+              <div v-else-if="templateError" class="hrk-note hrk-note--warn" role="alert">
+                <p class="oc-m0">{{ templateError }}</p>
+                <button class="oc-bk oc-mt" @click="loadTemplates">
+                  Erneut versuchen
+                </button>
+              </div>
+
+              <div v-else-if="templateItems.length">
+                <template v-for="cat in templateCategories" :key="cat">
+                  <h3 class="oc-sub-h">{{ cat }}</h3>
+                  <div
+                    v-for="item in templatesByCategory[cat]"
+                    :key="item.id"
+                    class="oc-item"
+                    :class="{ 'oc-item--active': selectedTemplateIds.has(item.id) }"
+                    role="checkbox"
+                    :aria-checked="selectedTemplateIds.has(item.id)"
+                    tabindex="0"
+                    @click="toggleTemplate(item.id)"
+                    @keydown.space.prevent="toggleTemplate(item.id)"
+                    @keydown.enter="toggleTemplate(item.id)"
+                  >
+                    <span class="oc-box" :class="{ 'oc-box--checked': selectedTemplateIds.has(item.id) }">
+                      <svg v-if="selectedTemplateIds.has(item.id)" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
+                    </span>
+                    <div class="oc-item__txt">
+                      <span class="oc-item__title">{{ item.title }}</span>
+                      <span v-if="item.description" class="hrk-muted hrk-small oc-item__desc">{{ item.description }}</span>
+                    </div>
+                  </div>
+                </template>
+
+                <p class="hrk-muted hrk-small oc-count">
+                  {{ selectedTemplateIds.size }} von {{ templateItems.length }} Punkte ausgewählt
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- Erstell-Fehler -->
-        <div v-if="createError" class="hrk-note hrk-note--danger" role="alert" aria-live="assertive" style="margin-top:var(--hrk-space-4)">
-          <p style="margin:0">{{ createError }}</p>
+        <div v-if="createError" class="oc-wrap oc-err">
+          <div class="hrk-note hrk-note--danger" role="alert" aria-live="assertive">
+            <p class="oc-m0">{{ createError }}</p>
+          </div>
         </div>
 
-        <!-- CTA -->
-        <div class="hrk-cta-bar" style="margin-top:var(--hrk-space-5)">
-          <button
-            class="hrk-btn hrk-btn--primary hrk-btn--block"
-            :disabled="creating || !kannAnlegen"
-            aria-label="Checkliste anlegen"
-            @click="createChecklist"
-          >
-            <span v-if="creating">
-              <span class="hrk-spinner" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span>
-              Wird angelegt …
-            </span>
-            <span v-else>Checkliste anlegen</span>
-          </button>
+        <!-- Hauptaktion -->
+        <div class="oc-cta">
+          <div class="oc-wrap">
+            <button
+              class="oc-fw oc-fw--lg"
+              :disabled="creating || !kannAnlegen"
+              aria-label="Checkliste anlegen"
+              @click="createChecklist"
+            >
+              <span v-if="creating" class="oc-busy">
+                <span class="hrk-spinner oc-spin" aria-hidden="true"></span>
+                Wird angelegt …
+              </span>
+              <span v-else>Checkliste anlegen</span>
+              <svg v-if="!creating" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- ====== ANSICHT: DETAIL ====== -->
       <div v-else-if="view === 'detail' && activeChecklist">
-        <button class="hrk-btn hrk-btn--ghost" style="margin-bottom:var(--hrk-space-4)" @click="view = 'list'"><svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="20" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></svg>Alle Checklisten</button>
+        <header class="oc-top">
+          <div class="oc-wrap">
+            <button class="oc-bk oc-back" @click="view = 'list'"><svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="20" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></svg>Alle Checklisten</button>
 
-        <p v-if="linkHinweis" class="hrk-note hrk-note--muted hrk-small" style="margin-bottom:var(--hrk-space-4)">{{ linkHinweis }}</p>
+            <p v-if="linkHinweis" class="hrk-note hrk-note--muted hrk-small">{{ linkHinweis }}</p>
 
-        <!-- Kopf + Fortschritt -->
-        <div class="hrk-card" style="margin-bottom:var(--hrk-space-5)">
-          <div class="hrk-record-head" style="margin-bottom:var(--hrk-space-4)">
-            <div class="hrk-record-head__main">
-              <h1 class="hrk-h1 hrk-record-head__name" style="margin-bottom:var(--hrk-space-1)">
-                {{ activeChecklist.employee_name }}
-              </h1>
-              <p class="hrk-muted hrk-record-head__type" style="margin:0">
-                Eintritt: {{ activeChecklist.start_date ? formatDate(activeChecklist.start_date) : '–' }}
-              </p>
-            </div>
-            <span class="hrk-badge" :class="statusBadge(activeChecklist.status).cls">
-              {{ statusBadge(activeChecklist.status).label }}
-            </span>
-          </div>
-
-          <!-- Fortschrittsbalken -->
-          <div
-            :aria-label="detailStats.done + ' von ' + detailStats.total + ' Punkte erledigt'"
-          >
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--hrk-space-2)">
-              <span class="hrk-small" style="font-weight:var(--hrk-fw-semibold)">
-                Fortschritt: {{ detailStats.done }}&thinsp;/&thinsp;{{ detailStats.total }} Punkte erledigt
-              </span>
-              <span class="hrk-small hrk-num" style="font-weight:var(--hrk-fw-semibold);color:var(--hrk-schiefer)">
-                {{ detailStats.pct }}%
+            <div class="oc-head">
+              <div class="oc-head__main">
+                <p class="oc-lab">Eintritt: {{ activeChecklist.start_date ? formatDate(activeChecklist.start_date) : '–' }}</p>
+                <h1 class="oc-h1">{{ activeChecklist.employee_name }}</h1>
+              </div>
+              <span class="hrk-badge" :class="statusBadge(activeChecklist.status).cls">
+                {{ statusBadge(activeChecklist.status).label }}
               </span>
             </div>
-            <div
-              class="progress-track progress-track--lg"
-              role="progressbar"
-              :aria-valuenow="detailStats.pct"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              <div class="progress-bar" :style="{ width: detailStats.pct + '%' }"></div>
+
+            <!-- Fortschritt -->
+            <div class="oc-prog oc-prog--lg" :aria-label="detailStats.done + ' von ' + detailStats.total + ' Punkte erledigt'">
+              <div class="oc-prog__txt">
+                <span class="hrk-small oc-strong">
+                  Fortschritt: {{ detailStats.done }}&thinsp;/&thinsp;{{ detailStats.total }} Punkte erledigt
+                </span>
+                <span class="hrk-small hrk-num oc-strong">{{ detailStats.pct }}%</span>
+              </div>
+              <div class="oc-track oc-track--lg" role="progressbar" :aria-valuenow="detailStats.pct" aria-valuemin="0" aria-valuemax="100">
+                <div class="oc-bar" :style="{ width: detailStats.pct + '%' }"></div>
+              </div>
             </div>
           </div>
-        </div>
+        </header>
 
         <!-- Items laden -->
-        <div v-if="itemsLoading" class="hrk-state" aria-live="polite">
-          <div class="hrk-spinner" aria-hidden="true"></div>
-          <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
+        <div v-if="itemsLoading" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state" aria-live="polite">
+            <div class="hrk-spinner" aria-hidden="true"></div>
+            <p class="hrk-muted">Checklisten-Punkte werden geladen …</p>
+          </div>
         </div>
 
-        <div v-else-if="itemsError" class="hrk-state" role="alert" aria-live="assertive">
-          <p class="hrk-state__title">{{ itemsError }}</p>
-          <button class="hrk-btn hrk-btn--secondary" @click="loadItems(activeChecklist.id)">Erneut versuchen</button>
+        <div v-else-if="itemsError" class="oc-band oc-band--grau">
+          <div class="oc-wrap hrk-state" role="alert" aria-live="assertive">
+            <p class="hrk-state__title">{{ itemsError }}</p>
+            <button class="oc-bk" @click="loadItems(activeChecklist.id)">Erneut versuchen</button>
+          </div>
         </div>
 
-        <!-- Items nach Kategorie -->
+        <!-- Items nach Kategorie: Weiss/Warmgrau im Wechsel -->
         <div v-else>
-          <div
-            v-for="cat in itemCategories"
+          <section
+            v-for="(cat, ci) in itemCategories"
             :key="cat"
-            class="hrk-card"
-            style="margin-bottom:var(--hrk-space-4)"
+            class="oc-band"
+            :class="ci % 2 === 0 ? 'oc-band--grau' : 'oc-band--weiss'"
           >
-            <h2 class="hrk-h2" style="margin-top:0">{{ cat }}</h2>
-
-            <div
-              v-for="item in itemsByCategory[cat]"
-              :key="item.id"
-              class="checklist-item"
-              :class="{ 'checklist-item--done': item.is_done }"
-              role="checkbox"
-              :aria-checked="item.is_done"
-              tabindex="0"
-              :aria-label="(item.is_done ? 'Erledigt: ' : 'Offen: ') + item.title"
-              @click="toggleItem(item)"
-              @keydown.space.prevent="toggleItem(item)"
-              @keydown.enter="toggleItem(item)"
-            >
-              <span
-                class="checklist-checkbox"
-                :class="{ 'checklist-checkbox--checked': item.is_done }"
-                aria-hidden="true"
-              >
-                <svg v-if="item.is_done" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
-              </span>
-              <div style="flex:1;min-width:0">
-                <span class="checklist-item-title" :class="{ 'checklist-item-title--done': item.is_done }">
-                  {{ item.title }}
-                </span>
-                <span v-if="item.description" class="hrk-muted hrk-small" style="display:block;margin-top:2px">
-                  {{ item.description }}
-                </span>
-                <span v-if="item.is_done && item.done_at" class="hrk-muted hrk-small" style="display:block;margin-top:2px">
-                  Erledigt: {{ formatDate(item.done_at) }}
-                </span>
+            <div class="oc-wrap oc-grp">
+              <div class="oc-grp__lab">
+                <span class="oc-nr" aria-hidden="true">{{ String(ci + 1).padStart(2, '0') }}</span>
+                <h2 class="oc-gt">{{ cat }}</h2>
               </div>
-              <span v-if="togglingIds.has(item.id)" class="hrk-spinner" style="width:16px;height:16px;border-width:2px;flex:none" aria-hidden="true"></span>
+              <div class="oc-grp__body">
+                <div
+                  v-for="item in itemsByCategory[cat]"
+                  :key="item.id"
+                  class="oc-item"
+                  :class="{ 'oc-item--done': item.is_done }"
+                  role="checkbox"
+                  :aria-checked="item.is_done"
+                  tabindex="0"
+                  :aria-label="(item.is_done ? 'Erledigt: ' : 'Offen: ') + item.title"
+                  @click="toggleItem(item)"
+                  @keydown.space.prevent="toggleItem(item)"
+                  @keydown.enter="toggleItem(item)"
+                >
+                  <span
+                    class="oc-box"
+                    :class="{ 'oc-box--checked': item.is_done }"
+                    aria-hidden="true"
+                  >
+                    <svg v-if="item.is_done" class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="5,12.5 10,17.5 19,7"/></svg>
+                  </span>
+                  <div class="oc-item__txt">
+                    <span class="oc-item__title" :class="{ 'oc-item__title--done': item.is_done }">
+                      {{ item.title }}
+                    </span>
+                    <span v-if="item.description" class="hrk-muted hrk-small oc-item__desc">
+                      {{ item.description }}
+                    </span>
+                    <span v-if="item.is_done && item.done_at" class="hrk-muted hrk-small oc-item__desc">
+                      Erledigt: {{ formatDate(item.done_at) }}
+                    </span>
+                  </div>
+                  <span v-if="togglingIds.has(item.id)" class="hrk-spinner oc-spin" aria-hidden="true"></span>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Toggle-Fehler -->
-          <div v-if="toggleError" class="hrk-note hrk-note--warn" role="alert" aria-live="polite">
-            <p style="margin:0">{{ toggleError }}</p>
-          </div>
-
-          <!-- Sync-Fehler (Status-Update fehlgeschlagen) -->
-          <div v-if="syncError" class="hrk-note hrk-note--danger" role="alert" aria-live="polite" style="margin-top:var(--hrk-space-3)">
-            <p style="margin:0">Speichern hat nicht geklappt. Versuche es nochmals.</p>
+          <!-- Toggle-Fehler / Sync-Fehler -->
+          <div v-if="toggleError || syncError" class="oc-wrap oc-err">
+            <div v-if="toggleError" class="hrk-note hrk-note--warn" role="alert" aria-live="polite">
+              <p class="oc-m0">{{ toggleError }}</p>
+            </div>
+            <div v-if="syncError" class="hrk-note hrk-note--danger" role="alert" aria-live="polite">
+              <p class="oc-m0">Speichern hat nicht geklappt. Versuche es nochmals.</p>
+            </div>
           </div>
         </div>
 
@@ -374,6 +405,24 @@
  * Auth: Anon-Key + User-JWT. Kein service_role im Frontend.
  * Design: einheitliches HRklar-Design-System (.hrk-*).
  */
+
+// Schriften (Stil A, Entscheid 13.10.2026): Gloock (Titel), Archivo (Labels), Inter (Text). Der WeWeb-<head>
+// laedt sie nicht. Eigener Link-Id, damit das Paket von header-pro/footer (id hrk-fonts) nicht verdraengt
+// wird. Gleicher Anbieter wie bisher; ohne Laden gelten Georgia bzw. System-Schrift.
+function hrkEnsureBrandFont() {
+  try {
+    const doc = (typeof wwLib !== 'undefined' && wwLib && typeof wwLib.getFrontDocument === 'function')
+      ? wwLib.getFrontDocument()
+      : (typeof document !== 'undefined' ? document : null);
+    if (!doc || !doc.head || doc.getElementById('hrk-fonts-marke')) return;
+    const link = doc.createElement('link');
+    link.id = 'hrk-fonts-marke'; link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Archivo:wght@500;600&family=Gloock&family=Inter:wght@400;500;600&display=swap';
+    doc.head.appendChild(link);
+  } catch (e) { /* Georgia als Rueckfall */ }
+}
+
+
 export default {
   props: {
     content: { type: Object, required: true },
@@ -568,6 +617,7 @@ export default {
   },
 
   mounted() {
+    hrkEnsureBrandFont();
     this.init();
   },
 
@@ -1163,8 +1213,20 @@ export default {
   --hrk-radius-card: 10px;
   --hrk-shadow: 0 1px 2px rgba(40,35,30,.05);
   --hrk-page-wide: 1200px;
+  /* Stil A «Editorial» (Entscheid 13.10.2026) */
+  --hrk-linie: #D6D0CA;
+  --hrk-warmgrau: #EFEBE7;
+  --hrk-gold-hauch: #FAF6EC;
+  --hrk-schiefer-hauch: #F2F5F8;
+  --hrk-font-label: "Archivo", "Inter", system-ui, sans-serif;
 }
 
+/* ============================================================
+   Stil A «Editorial» (Entscheid 13.10.2026, Phase 2) — gemeinsame Basis.
+   Linien statt Karten (Haarlinie #D6D0CA), Text-Knoepfe (Schiefer, Gold-Unterstrich nur fuer die eine Hauptaktion),
+   grosse Gloock-Titel, Archivo-Labels in Grossbuchstaben, Weiss/Warmgrau im Wechsel, Label-Spalte 220px + Inhalt.
+   Farbrollen: Bordeaux = Links/Hover, Schiefer = Knoepfe und Schritte, Gold = nur Linien und Punkte. Loeschen = Bordeaux-Rand.
+   ============================================================ */
 .hrk-root, .hrk-root * { box-sizing: border-box; }
 .hrk-root {
   width: 100%; /* volle Breite im WeWeb-Flex-Parent (sonst klebt der Inhalt links) */
@@ -1172,65 +1234,101 @@ export default {
   font-size: var(--hrk-fs-body);
   line-height: var(--hrk-lh-body);
   color: var(--hrk-text);
-  background: var(--hrk-creme);
+  background: var(--hrk-surface);
   -webkit-font-smoothing: antialiased;
 }
-.hrk-page { max-width: var(--hrk-page-max); margin: 0 auto; padding: var(--hrk-space-6) var(--hrk-space-4); }
-.hrk-h1 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h1); font-weight: var(--hrk-fw-semibold); line-height: 1.12; letter-spacing: -.02em; color: var(--hrk-text); margin: 0 0 var(--hrk-space-3); }
-.hrk-h2 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h2); font-weight: var(--hrk-fw-semibold); line-height: 1.2; letter-spacing: -.01em; color: var(--hrk-text); margin: var(--hrk-space-6) 0 var(--hrk-space-3); }
-.hrk-h3 { font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h3); font-weight: var(--hrk-fw-semibold); margin: var(--hrk-space-5) 0 var(--hrk-space-2); }
+.hrk-root a:focus-visible, .hrk-root button:focus-visible, .hrk-root input:focus-visible, .hrk-root select:focus-visible,
+.hrk-root textarea:focus-visible, .hrk-root [tabindex]:focus-visible, .hrk-root summary:focus-visible {
+  outline: 2px solid var(--hrk-schiefer); outline-offset: 3px; border-radius: 3px; box-shadow: none;
+}
 .hrk-muted { color: var(--hrk-text-muted); }
 .hrk-small { font-size: var(--hrk-fs-small); }
+.hrk-num { font-family: var(--hrk-font-mono); font-variant-numeric: tabular-nums; }
 .hrk-stack > * + * { margin-top: var(--hrk-space-4); }
+.hrk-icon { width: 20px; height: 20px; flex: none; }
+.hrk-icon--sm { width: 16px; height: 16px; }
+.hrk-icon--lg { width: 28px; height: 28px; }
 
-/* Knöpfe */
-.hrk-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--hrk-space-2);
-  min-height: var(--hrk-tap-min); padding: 0 var(--hrk-space-5);
-  font: inherit; font-weight: var(--hrk-fw-semibold);
-  border-radius: var(--hrk-radius-field); border: 1px solid transparent;
-  cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, color .15s;
-}
-.hrk-btn:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
-.hrk-btn--primary   { background: var(--hrk-bordeaux); color: var(--hrk-on-primary); }
-.hrk-btn--primary:hover { background: var(--hrk-bordeaux-dark); }
-.hrk-btn--secondary { background: var(--hrk-surface); color: var(--hrk-bordeaux); border-color: var(--hrk-border-strong); }
-.hrk-btn--secondary:hover { background: var(--hrk-bordeaux-soft); border-color: var(--hrk-bordeaux); }
-.hrk-btn--ghost     { background: transparent; color: var(--hrk-schiefer); }
-.hrk-btn--ghost:hover { background: var(--hrk-schiefer-soft); }
-.hrk-btn[disabled] { opacity: .5; cursor: not-allowed; }
-.hrk-btn--block { width: 100%; }
-.hrk-cta-bar { position: sticky; bottom: 0; padding: var(--hrk-space-3) var(--hrk-space-4);
-  background: var(--hrk-creme); border-top: 1px solid var(--hrk-border); }
+/* ---------------- Kopf, Raster, Baender ---------------- */
+.oc-main { display: block; width: 100%; }
+.oc-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--hrk-space-5); }
+.oc-top { background: var(--hrk-surface); padding: clamp(40px, 6vw, 64px) 0 clamp(24px, 4vw, 40px); }
+.oc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--hrk-space-4) var(--hrk-space-5); flex-wrap: wrap; }
+.oc-head__main { flex: 1 1 18rem; min-width: 0; }
+.oc-head__act { display: flex; align-items: center; gap: var(--hrk-space-5); flex-wrap: wrap; }
+.oc-lab { font-family: var(--hrk-font-label); font-size: var(--hrk-fs-xs); font-weight: var(--hrk-fw-semibold); letter-spacing: .14em;
+  text-transform: uppercase; color: var(--hrk-text-muted); margin: 0 0 var(--hrk-space-3); }
+.oc-h1 { font-family: var(--hrk-font-brand); font-weight: 400; letter-spacing: -.01em; color: var(--hrk-text);
+  font-size: clamp(36px, 6.4vw, 72px); line-height: 1.04; margin: 0; overflow-wrap: anywhere; }
+.oc-sub { margin: var(--hrk-space-3) 0 0; color: var(--hrk-text-muted); max-width: 46rem; }
+.oc-back { margin-bottom: var(--hrk-space-5); }
 
-/* Eingabefelder */
-.hrk-field { display: block; margin-bottom: var(--hrk-space-4); }
-.hrk-label { display: block; font-weight: var(--hrk-fw-medium); margin-bottom: var(--hrk-space-1); }
-.hrk-hint  { color: var(--hrk-text-muted); font-size: var(--hrk-fs-small); margin-top: var(--hrk-space-1); }
-.hrk-input, .hrk-select {
-  width: 100%; min-height: var(--hrk-tap-min); padding: var(--hrk-space-3);
-  font: inherit; color: var(--hrk-text); background: var(--hrk-surface);
-  border: 1px solid var(--hrk-border-strong); border-radius: var(--hrk-radius-field);
-}
-.hrk-input:focus, .hrk-select:focus { outline: none; border-color: var(--hrk-bordeaux); box-shadow: var(--hrk-focus-ring); }
-.hrk-input--error { border-color: var(--hrk-danger); }
-.hrk-field-error { color: var(--hrk-danger); font-size: var(--hrk-fs-small); font-weight: var(--hrk-fw-medium); margin: var(--hrk-space-1) 0 0; }
-.hrk-link { color: var(--hrk-bordeaux); text-decoration: underline; text-underline-offset: 2px; }
+.oc-band { border-top: 1px solid var(--hrk-linie); }
+.oc-band--grau { background: var(--hrk-warmgrau); }
+.oc-band--weiss { background: var(--hrk-surface); }
+.oc-grp { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--hrk-space-6); padding-top: 28px; padding-bottom: 28px; }
+.oc-grp__lab { min-width: 0; }
+.oc-nr { display: block; font-family: var(--hrk-font-label); font-size: var(--hrk-fs-xs); font-weight: var(--hrk-fw-semibold); letter-spacing: .14em; color: var(--hrk-text-muted); margin-bottom: 6px; }
+.oc-gt { font-family: var(--hrk-font-brand); font-weight: 400; letter-spacing: -.01em; font-size: 26px; line-height: 1.15; margin: 0; color: var(--hrk-text); overflow-wrap: anywhere; }
+.oc-gd { margin: var(--hrk-space-2) 0 0; font-size: var(--hrk-fs-small); color: var(--hrk-text-muted); }
+.oc-grp__body { min-width: 0; border-top: 1px solid var(--hrk-text); padding-top: var(--hrk-space-4); }
+.oc-sub-h { font-family: var(--hrk-font-label); font-size: var(--hrk-fs-xs); font-weight: var(--hrk-fw-semibold); letter-spacing: .14em;
+  text-transform: uppercase; color: var(--hrk-text-muted); margin: var(--hrk-space-5) 0 var(--hrk-space-2); }
+.oc-sub-h:first-child { margin-top: 0; }
+
+/* ---------------- Text-Knoepfe ---------------- */
+.oc-fw { display: inline-flex; align-items: center; gap: 10px; min-height: var(--hrk-tap-min); background: none; border: 0; border-bottom: 2px solid var(--hrk-gold);
+  border-radius: 0; padding: 6px 0; font: 600 16px/1.3 var(--hrk-font-body); color: var(--hrk-schiefer); text-decoration: none; cursor: pointer; }
+.hrk-root a.oc-fw { color: var(--hrk-schiefer); }
+.oc-fw:hover, .hrk-root a.oc-fw:hover { color: var(--hrk-schiefer-dark); }
+.oc-fw .hrk-icon { transition: transform .15s; }
+.oc-fw:hover .hrk-icon { transform: translateX(3px); }
+.oc-fw--lg { font-size: 18px; padding: 8px 0; }
+.oc-fw[disabled] { opacity: .5; cursor: not-allowed; }
+.oc-fw[disabled]:hover .hrk-icon { transform: none; }
+.oc-bk { display: inline-flex; align-items: center; gap: var(--hrk-space-2); min-height: var(--hrk-tap-min); background: none; border: 0; border-bottom: 1px solid var(--hrk-linie);
+  border-radius: 0; padding: 6px 0; font: 500 var(--hrk-fs-small)/1.3 var(--hrk-font-body); color: var(--hrk-text-muted); text-decoration: none; cursor: pointer; }
+.hrk-root a.oc-bk { color: var(--hrk-text-muted); }
+.oc-bk:hover, .hrk-root a.oc-bk:hover { color: var(--hrk-text); border-bottom-color: var(--hrk-text-muted); }
+.oc-bk[disabled] { opacity: .5; cursor: not-allowed; }
+.oc-del { display: inline-flex; align-items: center; min-height: var(--hrk-tap-min); background: transparent; border: 1px solid var(--hrk-bordeaux); border-radius: 4px;
+  padding: 0 var(--hrk-space-4); font: 600 var(--hrk-fs-small)/1.3 var(--hrk-font-body); color: var(--hrk-bordeaux); cursor: pointer; }
+.oc-del:hover { background: var(--hrk-bordeaux-soft); }
+.hrk-link, .hrk-root a.hrk-link { color: var(--hrk-bordeaux); text-decoration: underline; text-underline-offset: 2px; }
 .hrk-link:hover { color: var(--hrk-bordeaux-dark); }
 
-/* Karten */
-.hrk-card { background: var(--hrk-surface); border: 1px solid var(--hrk-border);
-  border-radius: var(--hrk-radius-card); box-shadow: var(--hrk-shadow); padding: var(--hrk-space-5); }
+/* Aktionsleiste unten (vorwaerts rechts, zurueck links) */
+.oc-bar { display: flex; justify-content: space-between; align-items: center; gap: var(--hrk-space-4); flex-wrap: wrap; padding-top: var(--hrk-space-5); margin-top: var(--hrk-space-5); border-top: 1px solid var(--hrk-linie); }
+.oc-bar--end { justify-content: flex-end; }
+.oc-cta { position: sticky; bottom: 0; z-index: 2; background: var(--hrk-surface); border-top: 1px solid var(--hrk-linie); padding: var(--hrk-space-3) 0; }
+.oc-cta .oc-fw:last-child { margin-left: auto; }
+.oc-cta .oc-wrap { display: flex; justify-content: space-between; align-items: center; gap: var(--hrk-space-4); flex-wrap: wrap; }
 
-/* Record-Head */
-.hrk-record-head { display: flex; align-items: flex-start; justify-content: space-between;
-  gap: var(--hrk-space-3); flex-wrap: wrap; }
-.hrk-record-head__main { flex: 1 1 14rem; min-width: 0; }
-.hrk-record-head__name { margin: 0 0 var(--hrk-space-1); }
-.hrk-record-head__type { margin: 0; }
+/* ---------------- Felder ---------------- */
+.hrk-field { display: block; margin-bottom: var(--hrk-space-5); }
+.hrk-label { display: block; font-family: var(--hrk-font-label); font-size: var(--hrk-fs-xs); font-weight: var(--hrk-fw-semibold); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--hrk-text-muted); margin-bottom: var(--hrk-space-2); }
+.hrk-hint { color: var(--hrk-text-muted); font-size: var(--hrk-fs-small); margin-top: var(--hrk-space-2); }
+.hrk-input, .hrk-select, .hrk-textarea {
+  width: 100%; min-height: 46px; padding: 11px var(--hrk-space-3);
+  font: inherit; color: var(--hrk-text); background: var(--hrk-surface);
+  border: 1px solid #8A827B; border-radius: 4px;
+}
+.hrk-input:focus, .hrk-select:focus, .hrk-textarea:focus { outline: 2px solid var(--hrk-schiefer); outline-offset: 3px; border-color: var(--hrk-schiefer); box-shadow: none; }
+.hrk-input--error { border-color: var(--hrk-danger); }
+.hrk-field-error { color: var(--hrk-danger); font-size: var(--hrk-fs-small); font-weight: var(--hrk-fw-medium); margin: var(--hrk-space-2) 0 0; }
 
-/* Badges */
-.hrk-badge { display: inline-flex; align-items: center; gap: var(--hrk-space-2);
+/* ---------------- Hinweise (Feld mit Linie links) ---------------- */
+.hrk-note { border-left: 2px solid var(--hrk-schiefer); background: var(--hrk-schiefer-hauch);
+  padding: var(--hrk-space-3) var(--hrk-space-4); border-radius: 0 4px 4px 0; margin: 0 0 var(--hrk-space-4); }
+.hrk-note--warn { border-left-color: var(--hrk-gold); background: var(--hrk-gold-hauch); }
+.hrk-note--danger { border-left-color: var(--hrk-danger); background: #FBF5F5; }
+.hrk-note--success { border-left-color: var(--hrk-success); background: var(--hrk-schiefer-hauch); }
+.hrk-note--muted { border-left-color: var(--hrk-linie); background: var(--hrk-warmgrau); color: var(--hrk-text-muted); }
+.hrk-note__list { margin: var(--hrk-space-2) 0 0; padding-left: var(--hrk-space-5); }
+
+/* ---------------- Status (Punkt + Wort) ---------------- */
+.hrk-badge { display: inline-flex; align-items: center; gap: var(--hrk-space-2); padding: 0; background: none;
   font-size: var(--hrk-fs-small); font-weight: var(--hrk-fw-semibold); line-height: 1.6; white-space: nowrap; }
 .hrk-badge::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .hrk-badge--success { color: var(--hrk-success); }
@@ -1239,118 +1337,71 @@ export default {
 .hrk-badge--info    { color: var(--hrk-info); }
 .hrk-badge--neutral { color: var(--hrk-neutral); }
 
-/* Zustände */
+/* ---------------- Zustaende ---------------- */
 .hrk-state { display: flex; flex-direction: column; align-items: center; gap: var(--hrk-space-3);
   padding: var(--hrk-space-7) var(--hrk-space-4); color: var(--hrk-text-muted); text-align: center; }
 .hrk-state--mini { padding: var(--hrk-space-6) var(--hrk-space-3); }
 .hrk-state__title { color: var(--hrk-text); font-weight: var(--hrk-fw-semibold); margin: 0; }
-.hrk-spinner { width: 28px; height: 28px; border: 3px solid var(--hrk-border);
-  border-top-color: var(--hrk-schiefer); border-radius: 50%; animation: hrk-spin .8s linear infinite; }
+.hrk-spinner { width: 28px; height: 28px; border: 3px solid var(--hrk-linie); border-top-color: var(--hrk-schiefer); border-radius: 50%; animation: hrk-spin .8s linear infinite; }
 @keyframes hrk-spin { to { transform: rotate(360deg); } }
-.hrk-empty { text-align: center; color: var(--hrk-text-muted); padding: var(--hrk-space-7) var(--hrk-space-4); }
+@media (prefers-reduced-motion: reduce) { .hrk-spinner { animation-duration: 2.4s; } .oc-fw .hrk-icon { transition: none; } }
+.oc-wrap.hrk-state { padding-top: clamp(40px, 6vw, 64px); padding-bottom: clamp(40px, 6vw, 64px); }
 
-/* ---------------- Icons (Inline-SVG, stroke=currentColor) ---------------- */
-.hrk-icon { width: var(--hrk-icon-size-md); height: var(--hrk-icon-size-md); flex: none; }
-.hrk-icon--sm { width: var(--hrk-icon-size-sm); height: var(--hrk-icon-size-sm); }
-.hrk-icon--lg { width: var(--hrk-icon-size-lg); height: var(--hrk-icon-size-lg); }
-.hrk-empty-icon { display: block; color: var(--hrk-schiefer); margin: 0 auto; }
-/* Zahlen in Kolonnen: Prozente, Zaehler */
-.hrk-num { font-family: var(--hrk-font-mono); font-variant-numeric: tabular-nums; }
-.hrk-actions { display: flex; flex-wrap: wrap; gap: var(--hrk-space-3); }
-
-/* Hinweis-Boxen */
-.hrk-note { border-left: 3px solid var(--hrk-info); background: var(--hrk-info-bg);
-  padding: var(--hrk-space-3) var(--hrk-space-4); border-radius: 0 var(--hrk-radius-field) var(--hrk-radius-field) 0; }
-.hrk-note--warn   { border-left-color: var(--hrk-warning); background: var(--hrk-warning-bg); }
-.hrk-note--danger { border-left-color: var(--hrk-danger); background: var(--hrk-danger-bg); }
-.hrk-note--muted  { border-left-color: var(--hrk-border-strong); background: var(--hrk-surface-muted); color: var(--hrk-text-muted); }
-
-/* ──────── Fortschrittsbalken (komponentenspezifisch) ──────── */
-.progress-track {
-  width: 100%;
-  height: 8px;
-  background: var(--hrk-border);
-  border-radius: 0;
-  overflow: hidden;
+@media (max-width: 860px) {
+  .oc-grp { grid-template-columns: minmax(0, 1fr); gap: var(--hrk-space-4); }
+  .oc-gt { font-size: 24px; }
 }
-.progress-track--lg { height: 12px; }
-.progress-bar {
-  height: 100%;
-  background: var(--hrk-schiefer);
-  border-radius: 0;
-  transition: width .3s ease;
-  min-width: 4px;
-}
-
-/* ──────── Checklisten-Items (Liste + Auswahl) ──────── */
-.checklist-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--hrk-space-3);
-  min-height: var(--hrk-tap-min);
-  padding: var(--hrk-space-3) var(--hrk-space-2);
-  border-radius: var(--hrk-radius-field);
-  border-bottom: 1px solid var(--hrk-border);
-  cursor: pointer;
-  transition: background .12s;
-  user-select: none;
-}
-.checklist-item:last-child { border-bottom: 0; }
-.checklist-item:hover  { background: var(--hrk-surface-muted); }
-.checklist-item:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
-.checklist-item--done { opacity: .75; }
-
-.checklist-item-select {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--hrk-space-3);
-  min-height: var(--hrk-tap-min);
-  padding: var(--hrk-space-3) var(--hrk-space-2);
-  border-radius: var(--hrk-radius-field);
-  border-bottom: 1px solid var(--hrk-border);
-  cursor: pointer;
-  transition: background .12s;
-  user-select: none;
-}
-.checklist-item-select:last-child { border-bottom: 0; }
-.checklist-item-select:hover { background: var(--hrk-surface-muted); }
-.checklist-item-select:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
-.checklist-item-select--active { background: var(--hrk-bordeaux-soft); }
-
-.checklist-checkbox {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--hrk-border-strong);
-  border-radius: var(--hrk-radius-field);
-  background: var(--hrk-surface);
-  color: var(--hrk-on-dark);
-  margin-top: 2px;
-  transition: background .12s, border-color .12s;
-}
-.checklist-checkbox--checked {
-  background: var(--hrk-bordeaux);
-  border-color: var(--hrk-bordeaux);
-}
-
-.checklist-item-title {
-  font-weight: var(--hrk-fw-medium);
-}
-.checklist-item-title--done {
-  text-decoration: line-through;
-  color: var(--hrk-text-muted);
-}
-
-/* ──────── Responsive ──────── */
 @media (max-width: 600px) {
-  :root, .hrk-root { --hrk-fs-h1: 1.625rem; }
-  .hrk-page { padding: var(--hrk-space-4) var(--hrk-space-3); }
-  .hrk-card { padding: var(--hrk-space-4); }
-  .hrk-actions { flex-direction: column; align-items: stretch; }
-  .hrk-actions .hrk-btn { width: 100%; }
-  .hrk-cta-bar .hrk-btn { width: 100%; }
+  .oc-wrap { padding-left: var(--hrk-space-4); padding-right: var(--hrk-space-4); }
+  .oc-bar, .oc-cta .oc-wrap { flex-direction: column-reverse; align-items: stretch; }
+  .oc-bar .oc-fw, .oc-cta .oc-fw { justify-content: space-between; }
+  .oc-cta .oc-fw:last-child { margin-left: 0; }
+  .oc-head__act { width: 100%; justify-content: space-between; }
 }
+
+/* ============================================================
+   Eintritts-Checklisten — Besonderheiten
+   ============================================================ */
+.oc-m0 { margin: 0; }
+.oc-mt { margin-top: var(--hrk-space-2); }
+.oc-strong { font-weight: var(--hrk-fw-semibold); color: var(--hrk-text); }
+.oc-empty-icon { color: var(--hrk-schiefer); }
+.oc-err { padding-top: var(--hrk-space-4); }
+.oc-field-date { max-width: 16rem; }
+.oc-busy { display: inline-flex; align-items: center; gap: var(--hrk-space-2); }
+.oc-spin { width: 16px; height: 16px; border-width: 2px; flex: none; }
+
+/* Liste: Zeilen mit Haarlinien */
+.oc-row { padding: var(--hrk-space-4) 0; border-bottom: 1px solid var(--hrk-linie); cursor: pointer; }
+.oc-row:last-child { border-bottom: 0; }
+.oc-row:hover { background: var(--hrk-schiefer-hauch); }
+.oc-row:hover .oc-row__name { color: var(--hrk-bordeaux); }
+.oc-row__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--hrk-space-3); flex-wrap: wrap; }
+.oc-row__main { flex: 1 1 14rem; min-width: 0; }
+.oc-row__name { font-family: var(--hrk-font-body); font-size: var(--hrk-fs-body); font-weight: var(--hrk-fw-semibold); margin: 0; color: var(--hrk-text); overflow-wrap: anywhere; }
+.oc-row__meta { margin: 2px 0 0; font-size: var(--hrk-fs-small); color: var(--hrk-text-muted); }
+.oc-row__dot { margin: 0 var(--hrk-space-1); }
+
+/* Fortschritt: feine Linie statt dicker Balken */
+.oc-prog { margin-top: var(--hrk-space-3); }
+.oc-prog--lg { margin-top: var(--hrk-space-6); }
+.oc-prog__txt { display: flex; justify-content: space-between; align-items: baseline; gap: var(--hrk-space-3); margin-bottom: var(--hrk-space-2); }
+.oc-track { width: 100%; height: 3px; background: var(--hrk-linie); overflow: hidden; }
+.oc-track--lg { height: 4px; }
+.oc-bar { height: 100%; background: var(--hrk-schiefer); transition: width .3s ease; min-width: 3px; }
+
+/* Punkte (Liste und Auswahl) */
+.oc-item { display: flex; align-items: flex-start; gap: var(--hrk-space-3); min-height: var(--hrk-tap-min); padding: var(--hrk-space-3) 0;
+  border-bottom: 1px solid var(--hrk-linie); cursor: pointer; user-select: none; }
+.oc-item:last-of-type { border-bottom: 0; }
+.oc-item:hover { background: var(--hrk-schiefer-hauch); }
+
+.oc-item__txt { flex: 1; min-width: 0; }
+.oc-item__title { font-weight: var(--hrk-fw-medium); }
+.oc-item__title--done { text-decoration: line-through; color: var(--hrk-text-muted); }
+.oc-item__desc { display: block; margin-top: 2px; }
+.oc-box { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: 2px;
+  border: 1px solid #8A827B; border-radius: 4px; background: var(--hrk-surface); color: var(--hrk-on-dark); }
+.oc-box--checked { background: var(--hrk-schiefer); border-color: var(--hrk-schiefer); }
+.oc-count { margin: var(--hrk-space-4) 0 0; }
 </style>
