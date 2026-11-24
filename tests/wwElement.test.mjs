@@ -10,7 +10,7 @@
 // =============================================================================
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -24,7 +24,10 @@ assert.ok(scriptStart > -1 && scriptEnd > scriptStart, "Script-Block im SFC nich
 const scriptSrc = sfc.slice(scriptStart + "<script>".length, scriptEnd);
 
 const dir = mkdtempSync(join(tmpdir(), "chk-test-"));
-const modPath = join(dir, "wwElement.options.mjs");
+// Das SFC importiert ./sitzung-muster.js (Muster A): neben die Optionen legen, als ESM laden.
+writeFileSync(join(dir, "package.json"), '{"type":"module"}');
+copyFileSync(join(here, "..", "src", "sitzung-muster.js"), join(dir, "sitzung-muster.js"));
+const modPath = join(dir, "wwElement.options.js");
 writeFileSync(modPath, scriptSrc, "utf8");
 const options = (await import(pathToFileURL(modPath).href)).default;
 

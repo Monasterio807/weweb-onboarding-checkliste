@@ -422,6 +422,8 @@ function hrkEnsureBrandFont() {
   } catch (e) { /* Georgia als Rueckfall */ }
 }
 
+// Muster A «Sitzung läuft ab», Regel 1 (A-012, Frontend-Audit G5a-33): ein Token-Wechsel lädt nie neu.
+import { sollNeuLaden } from './sitzung-muster.js';
 
 export default {
   props: {
@@ -444,6 +446,9 @@ export default {
       checklists: [],
       authError: false,
       loadError: '',
+      // Muster A, Regel 1: erst nach erfolgreichem Laden gesetzt
+      geladenEinmal: false,
+      geladenFuer: '',
 
       // Erstellen
       form: { employee_id: '', employee_name: '', start_date: '' },
@@ -585,11 +590,13 @@ export default {
   },
 
   watch: {
+    // Muster A, Regel 1: WeWeb erneuert den Token im Hintergrund. Das darf nach dem Laden
+    // nie neu laden (sonst springt die Ansicht zurück und das Getippte ist weg).
     'content.authToken'(val, old) {
-      if (val && val !== old) this.init();
+      if (val && val !== old) this.beiAuthWechsel();
     },
     'content.apiKey'(val, old) {
-      if (val && val !== old) this.init();
+      if (val && val !== old) this.beiAuthWechsel();
     },
     // s2-B04: Eintrittsdatum aus dem Personenstamm vorbelegen (nur wenn noch leer),
     // Fehler löschen, sobald eine Auswahl da ist.
@@ -626,6 +633,17 @@ export default {
     init() {
       this.view = 'list';
       this.loadChecklists();
+    },
+
+    beiAuthWechsel() {
+      const neuLaden = sollNeuLaden({
+        geladen: this.geladenEinmal,
+        needLogin: this.authError,
+        ladeFehler: !!this.loadError,
+        geladenFuer: this.geladenFuer,
+        nutzerJetzt: this.resolvedUserId,
+      });
+      if (neuLaden) this.init();
     },
 
     /* ──────────────────── Hilfsmethoden ──────────────────── */
@@ -697,6 +715,8 @@ export default {
         const data = await res.json();
         // Stats nachladen
         this.checklists = await this._enrichWithStats(data);
+        this.geladenEinmal = true;
+        this.geladenFuer = this.resolvedUserId;
         this.$emit('trigger-event', { name: 'loaded', event: {} });
 
       } catch (err) {
