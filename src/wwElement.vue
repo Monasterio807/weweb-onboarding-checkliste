@@ -449,6 +449,7 @@ export default {
       // Muster A, Regel 1: erst nach erfolgreichem Laden gesetzt
       geladenEinmal: false,
       geladenFuer: '',
+      ladeNr: 0,           // Laufnummer: nur der jüngste loadChecklists-Lauf darf schreiben
 
       // Erstellen
       form: { employee_id: '', employee_name: '', start_date: '' },
@@ -685,6 +686,7 @@ export default {
 
     /* ──────────────────── LISTE laden ──────────────────── */
     async loadChecklists() {
+      const nr = ++this.ladeNr;
       this.loading    = true;
       this.authError  = false;
       this.loadError  = '';
@@ -702,6 +704,7 @@ export default {
           method: 'GET',
           headers: { ...this.authHeaders, 'Prefer': 'return=representation' },
         });
+        if (nr !== this.ladeNr) return;
 
         if (res.status === 401 || res.status === 403) {
           this.authError = true;
@@ -713,20 +716,24 @@ export default {
         }
 
         const data = await res.json();
+        if (nr !== this.ladeNr) return;
         // Stats nachladen
-        this.checklists = await this._enrichWithStats(data);
+        const mitStats = await this._enrichWithStats(data);
+        if (nr !== this.ladeNr) return;
+        this.checklists = mitStats;
         this.geladenEinmal = true;
         this.geladenFuer = this.resolvedUserId;
         this.$emit('trigger-event', { name: 'loaded', event: {} });
 
       } catch (err) {
+        if (nr !== this.ladeNr) return;
         if (err && err.name === 'AbortError') {
           this.loadError = 'Die Verbindung hat zu lange gedauert. Bitte versuch es nochmals.';
         } else {
           this.loadError = 'Die Verbindung hat nicht geklappt. Prüfe dein Internet und versuche es nochmals.';
         }
       } finally {
-        this.loading = false;
+        if (nr === this.ladeNr) this.loading = false;
       }
     },
 

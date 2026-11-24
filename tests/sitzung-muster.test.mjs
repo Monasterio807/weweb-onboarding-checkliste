@@ -219,3 +219,44 @@ test("G5a-33: leerer neuer Token löst nichts aus", async () => {
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(listenAufrufe(calls), vorher);
 });
+
+// ─── Laufnummer: ein überholter Ladelauf schreibt nichts (Review-Fund) ───────
+test("G5a-33: eine ältere Anfrage mit 401 darf nach einer neueren erfolgreichen nichts überschreiben", async () => {
+  const wartende = [];
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("/onboarding_checklists?select=")) {
+      return new Promise((resolve) => wartende.push(resolve));
+    }
+    return { ok: true, status: 200, json: async () => [] };
+  };
+  const vm = makeVm();
+  const alt = vm.loadChecklists();
+  const neu = vm.loadChecklists();
+  assert.equal(wartende.length, 2);
+  wartende[1]({ ok: true, status: 200, json: async () => [] });
+  await neu;
+  assert.equal(vm.geladenEinmal, true);
+  wartende[0]({ ok: false, status: 401, json: async () => ({}) });
+  await alt;
+  assert.equal(vm.authError, false, "überholter Lauf darf die Anmelde-Ansicht nicht setzen");
+  assert.equal(vm.loading, false);
+});
+
+test("G5a-33: ein überholter Lauf mit Netzfehler setzt keinen Ladefehler", async () => {
+  const wartende = [];
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("/onboarding_checklists?select=")) {
+      return new Promise((resolve, reject) => wartende.push({ resolve, reject }));
+    }
+    return { ok: true, status: 200, json: async () => [] };
+  };
+  const vm = makeVm();
+  const alt = vm.loadChecklists();
+  const neu = vm.loadChecklists();
+  wartende[1].resolve({ ok: true, status: 200, json: async () => [] });
+  await neu;
+  wartende[0].reject(new TypeError("Failed to fetch"));
+  await alt;
+  assert.equal(vm.loadError, "");
+  assert.equal(vm.loading, false);
+});
